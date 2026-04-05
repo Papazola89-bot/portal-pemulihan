@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/jadual", label: "Jadual Kelas", icon: "📅" },
   { href: "/dashboard/kemahiran", label: "Laporan Kemahiran", icon: "📊" },
   { href: "/dashboard/saringan", label: "Data Saringan", icon: "✅" },
+  { href: "/dashboard/tetapan", label: "Tetapan", icon: "⚙️" },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
