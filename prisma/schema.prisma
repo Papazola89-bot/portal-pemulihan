@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+model Murid {
+  id             String          @id @default(cuid())
+  nama           String
+  kelas          String
+  jenisPemulihan String
+  tahun          Int
+  createdAt      DateTime        @default(now())
+  kemahiranTicks KemahiranTick[]
+  saringanTicks  SaringanTick[]
+}
+
+model Subjek {
+  id        String      @id @default(cuid())
+  nama      String
+  kemahiran Kemahiran[]
+}
+
+model Kemahiran {
+  id       String          @id @default(cuid())
+  nama     String
+  urutan   Int             @default(0)
+  subjekId String
+  subjek   Subjek          @relation(fields: [subjekId], references: [id], onDelete: Cascade)
+  ticks    KemahiranTick[]
+}
+
+model KemahiranTick {
+  id          String    @id @default(cuid())
+  muridId     String
+  kemahiranId String
+  kuasai      Boolean   @default(false)
+  tarikhTick  DateTime?
+  murid       Murid     @relation(fields: [muridId], references: [id], onDelete: Cascade)
+  kemahiran   Kemahiran @relation(fields: [kemahiranId], references: [id], onDelete: Cascade)
+
+  @@unique([muridId, kemahiranId])
+}
+
+model Jadual {
+  id     String @id @default(cuid())
+  hari   String
+  masa   String
+  subjek String
+  kelas  String @default("")
+}
+
+model Saringan {
+  id    String         @id @default(cuid())
+  nama  String
+  tahun Int
+  ticks SaringanTick[]
+}
+
+model SaringanTick {
+  id         String   @id @default(cuid())
+  saringanId String
+  muridId    String
+  kuasai     Boolean  @default(false)
+  kuasaiBM   Boolean  @default(false)
+  kuasaiMat  Boolean  @default(false)
+  saringan   Saringan @relation(fields: [saringanId], references: [id], onDelete: Cascade)
+  murid      Murid    @relation(fields: [muridId], references: [id], onDelete: Cascade)
+
+  @@unique([saringanId, muridId])
+}
