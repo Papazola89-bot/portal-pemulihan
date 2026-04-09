@@ -91,11 +91,11 @@ export default function KemahiranPage() {
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center">
         <select value={tahun} onChange={(e) => setTahun(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
           {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
         <select value={selectedMurid} onChange={(e) => setSelectedMurid(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-w-48">
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black min-w-48">
           <option value="">-- Pilih Murid --</option>
           {muridList.map((m) => <option key={m.id} value={m.id}>{m.nama} ({m.kelas})</option>)}
         </select>

@@ -198,7 +198,7 @@ export default function MuridPage() {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Tahun</label>
               <select value={form.tahun} onChange={(e) => setForm({ ...form, tahun: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
                 {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>

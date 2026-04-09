@@ -89,7 +89,7 @@ export default function SaringanPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
         <select value={tahun} onChange={(e) => { setTahun(e.target.value); setSelected("") }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
           {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
         {saringanList.length < 3 && (
