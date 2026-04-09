@@ -102,8 +102,12 @@ export default function KemahiranPage() {
         <div className="flex gap-1">
           {subjekList.map((s) => (
             <button key={s.id} onClick={() => setSelectedSubjek(s.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                ${selectedSubjek === s.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={selectedSubjek === s.id
+                ? { backgroundColor: "#35393c", color: "#ffffff" }
+                : { backgroundColor: "#f3f4f6", color: "#374151" }
+              }
+            >
               {s.nama}
             </button>
           ))}
@@ -114,13 +118,13 @@ export default function KemahiranPage() {
       {selectedMurid && currentSubjek && (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium" style={{ color: "#35393c" }}>
               {muridList.find((m) => m.id === selectedMurid)?.nama} — {currentSubjek.nama}
             </span>
-            <span className="text-sm font-bold text-blue-600">{kuasaiCount}/{totalKemahiran} ({peratus}%)</span>
+            <span className="text-sm font-bold" style={{ color: "#35393c" }}>{kuasaiCount}/{totalKemahiran} ({peratus}%)</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-3">
-            <div className="bg-blue-500 h-3 rounded-full transition-all" style={{ width: `${peratus}%` }} />
+            <div className="h-3 rounded-full transition-all" style={{ width: `${peratus}%`, backgroundColor: "#a4d8ff" }} />
           </div>
         </div>
       )}
@@ -128,7 +132,7 @@ export default function KemahiranPage() {
       {/* Kemahiran list */}
       {currentSubjek && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 font-medium text-gray-700">
+          <div className="px-5 py-3 border-b font-medium" style={{ backgroundColor: "#dff0ff", color: "#35393c", borderColor: "#a4d8ff" }}>
             Kemahiran — {currentSubjek.nama}
           </div>
           <div className="divide-y divide-gray-100">
@@ -141,10 +145,13 @@ export default function KemahiranPage() {
                   {selectedMurid ? (
                     <button
                       onClick={() => toggleTick(k.id)}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors
-                        ${kuasai ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-400"}`}
+                      className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                      style={kuasai
+                        ? { backgroundColor: "#35393c", borderColor: "#35393c", color: "#a4d8ff" }
+                        : { borderColor: "#d1d5db" }
+                      }
                     >
-                      {kuasai && <span className="text-xs">✓</span>}
+                      {kuasai && <span className="text-xs font-bold">✓</span>}
                     </button>
                   ) : (
                     <div className="w-5 h-5 rounded border-2 border-gray-200 flex-shrink-0" />
@@ -154,13 +161,14 @@ export default function KemahiranPage() {
                       <input value={editNama} onChange={(e) => setEditNama(e.target.value)}
                         className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm" />
                       <button onClick={() => handleEditKemahiran(currentSubjek.id, k.id)}
-                        className="text-xs text-blue-600 font-medium">Simpan</button>
+                        className="text-xs font-medium" style={{ color: "#35393c" }}>Simpan</button>
                       <button onClick={() => setEditKemahiran(null)}
                         className="text-xs text-gray-500">Batal</button>
                     </div>
                   ) : (
                     <>
-                      <span className={`flex-1 text-sm ${kuasai && selectedMurid ? "text-green-700 font-medium" : "text-gray-700"}`}>
+                      <span className={`flex-1 text-sm ${kuasai && selectedMurid ? "font-medium" : "text-gray-700"}`}
+                        style={kuasai && selectedMurid ? { color: "#35393c" } : {}}>
                         {k.nama}
                       </span>
                       {tick?.tarikhTick && (
@@ -169,7 +177,7 @@ export default function KemahiranPage() {
                         </span>
                       )}
                       <button onClick={() => { setEditKemahiran(k.id); setEditNama(k.nama) }}
-                        className="text-xs text-gray-400 hover:text-blue-600">✏️</button>
+                        className="text-xs text-gray-400 hover:text-gray-600">✏️</button>
                       <button onClick={() => handleDeleteKemahiran(currentSubjek.id, k.id)}
                         className="text-xs text-gray-400 hover:text-red-600">🗑️</button>
                     </>
@@ -185,7 +193,8 @@ export default function KemahiranPage() {
               placeholder="Tambah kemahiran baru..."
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
             <button onClick={() => handleAddKemahiran(currentSubjek.id)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+              className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: "#35393c" }}>
               + Tambah
             </button>
           </div>

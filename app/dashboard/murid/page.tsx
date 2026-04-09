@@ -110,7 +110,8 @@ export default function MuridPage() {
         </select>
         <button
           onClick={() => { setForm({ ...emptyForm, tahun }); setEditId(null); setShowForm(true) }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#35393c" }}
         >
           + Tambah Murid
         </button>
@@ -120,7 +121,8 @@ export default function MuridPage() {
         </label>
         <button
           onClick={downloadTemplate}
-          className="bg-green-50 hover:bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded-lg text-sm font-medium"
+          className="border px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#dff0ff", borderColor: "#a4d8ff", color: "#35393c" }}
         >
           ⬇️ Muat Turun Template
         </button>
@@ -135,16 +137,16 @@ export default function MuridPage() {
       </div>
 
       {/* Panduan format CSV */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
-        <p className="font-semibold text-blue-800 mb-2">📋 Panduan Upload CSV</p>
-        <ol className="list-decimal list-inside space-y-1 text-blue-700 text-xs">
+      <div className="rounded-xl p-4 text-sm border" style={{ backgroundColor: "#dff0ff", borderColor: "#a4d8ff" }}>
+        <p className="font-semibold mb-2" style={{ color: "#35393c" }}>📋 Panduan Upload CSV</p>
+        <ol className="list-decimal list-inside space-y-1 text-xs" style={{ color: "#35393c" }}>
           <li>Klik <strong>Muat Turun Template</strong> untuk dapatkan fail CSV contoh</li>
           <li>Buka fail dengan <strong>Microsoft Excel</strong> atau <strong>Google Sheets</strong></li>
           <li>Isi maklumat murid mengikut kolum yang disediakan</li>
           <li>Simpan semula sebagai format <strong>.csv</strong></li>
           <li>Klik <strong>Upload CSV</strong> dan pilih fail yang dah diisi</li>
         </ol>
-        <div className="mt-3 bg-white rounded-lg p-3 border border-blue-100">
+        <div className="mt-3 bg-white rounded-lg p-3 border border-white/60">
           <p className="text-xs font-semibold text-gray-600 mb-1">Format kolum yang wajib diisi:</p>
           <div className="grid grid-cols-4 gap-2 text-xs">
             <div className="bg-gray-50 rounded p-1.5 text-center">
@@ -172,17 +174,17 @@ export default function MuridPage() {
 
       {showForm && (
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-700 mb-4">{editId ? "Edit Murid" : "Tambah Murid Baru"}</h3>
+          <h3 className="font-semibold mb-4" style={{ color: "#35393c" }}>{editId ? "Edit Murid" : "Tambah Murid Baru"}</h3>
           <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nama</label>
               <input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" required />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Kelas</label>
               <input value={form.kelas} onChange={(e) => setForm({ ...form, kelas: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" required />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Jenis Pemulihan</label>
@@ -202,7 +204,8 @@ export default function MuridPage() {
             </div>
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" disabled={loading}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                className="text-white px-5 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                style={{ backgroundColor: "#35393c" }}>
                 {loading ? "Menyimpan..." : "Simpan"}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
@@ -215,8 +218,8 @@ export default function MuridPage() {
       )}
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-          <span className="font-medium text-gray-700">Senarai Murid — Tahun {tahun}</span>
+        <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between" style={{ backgroundColor: "#f8fbff" }}>
+          <span className="font-medium" style={{ color: "#35393c" }}>Senarai Murid — Tahun {tahun}</span>
           <span className="text-sm text-gray-500">{murid.length} murid</span>
         </div>
         {murid.length === 0 ? (
@@ -224,26 +227,28 @@ export default function MuridPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium">Bil</th>
-                  <th className="text-left px-4 py-3 font-medium">Nama</th>
-                  <th className="text-left px-4 py-3 font-medium">Kelas</th>
-                  <th className="text-left px-4 py-3 font-medium">Jenis Pemulihan</th>
-                  <th className="text-right px-4 py-3 font-medium">Tindakan</th>
+              <thead>
+                <tr style={{ backgroundColor: "#dff0ff" }}>
+                  <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Bil</th>
+                  <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Nama</th>
+                  <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Kelas</th>
+                  <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Jenis Pemulihan</th>
+                  <th className="text-right px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tindakan</th>
                 </tr>
               </thead>
               <tbody>
                 {murid.map((m, i) => (
                   <tr key={m.id} className="border-t border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-400">{i + 1}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{m.nama}</td>
+                    <td className="px-4 py-3 font-medium" style={{ color: "#35393c" }}>{m.nama}</td>
                     <td className="px-4 py-3 text-gray-600">{m.kelas}</td>
                     <td className="px-4 py-3">
-                      <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs">{m.jenisPemulihan}</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: "#a4d8ff", color: "#35393c" }}>
+                        {m.jenisPemulihan}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right space-x-2">
-                      <button onClick={() => handleEdit(m)} className="text-blue-600 hover:text-blue-800 text-xs font-medium">Edit</button>
+                      <button onClick={() => handleEdit(m)} className="text-xs font-medium hover:opacity-70" style={{ color: "#35393c" }}>Edit</button>
                       <button onClick={() => handleDelete(m.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Padam</button>
                     </td>
                   </tr>

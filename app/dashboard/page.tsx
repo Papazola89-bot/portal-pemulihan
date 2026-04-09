@@ -13,26 +13,22 @@ export default async function DashboardPage() {
     }),
   ])
 
-  // Kira murid mengikut jenis pemulihan
   const jumlahBM = muridList.filter((m) => m.jenisPemulihan === "Bahasa Melayu").length
   const jumlahMT = muridList.filter((m) => m.jenisPemulihan === "Matematik").length
   const jumlahBMdanMT = muridList.filter((m) => m.jenisPemulihan === "Bahasa Melayu dan Matematik").length
   const jumlahLain = muridList.length - jumlahBM - jumlahMT - jumlahBMdanMT
 
-  // Murid menguasai = kuasai dalam Pelepasan 2
   const pelepasan2 = saringanList.find((s) => s.nama.toLowerCase().includes("pelepasan 2"))
   const muridKePerdanaSemua = pelepasan2 ? pelepasan2.ticks.filter((t) => t.kuasai).map((t) => t.muridId) : []
 
-  // Senarai kelas unik
   const kelasUnik = [...new Set(muridList.map((m) => m.kelas))].sort()
-
   const saringanNama = ["Pengesanan", "Pelepasan 1", "Pelepasan 2"]
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold" style={{ color: "#35393c" }}>
           Selamat Datang, {session?.user?.name ?? "Guru"} 👋
         </h2>
         <p className="text-gray-500 text-sm mt-1">
@@ -46,10 +42,10 @@ export default async function DashboardPage() {
           Ringkasan Keseluruhan
         </h3>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="lg:col-span-1 rounded-xl bg-blue-600 text-white p-4 flex flex-col justify-between">
-            <div className="text-xs font-medium opacity-80">Jumlah Murid</div>
+          <div className="lg:col-span-1 rounded-xl text-white p-4 flex flex-col justify-between" style={{ backgroundColor: "#35393c" }}>
+            <div className="text-xs font-medium opacity-70">Jumlah Murid</div>
             <div className="text-5xl font-bold mt-1">{muridList.length}</div>
-            <div className="text-xs opacity-70 mt-1">Tahun {tahunSemasa}</div>
+            <div className="text-xs opacity-50 mt-1">Tahun {tahunSemasa}</div>
           </div>
           <div className="rounded-xl border bg-orange-50 border-orange-200 p-4">
             <div className="text-xs text-orange-500 font-semibold">Pemulihan BM</div>
@@ -109,9 +105,9 @@ export default async function DashboardPage() {
               return (
                 <div key={kelas} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   {/* Header kelas */}
-                  <div className="bg-blue-700 text-white px-4 py-3 flex items-center justify-between">
+                  <div className="text-white px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#35393c" }}>
                     <span className="font-bold text-base">Kelas {kelas}</span>
-                    <span className="bg-blue-500 text-xs px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#a4d8ff", color: "#35393c" }}>
                       {muridKelas.length} murid
                     </span>
                   </div>
@@ -152,8 +148,8 @@ export default async function DashboardPage() {
                             </div>
                             <div className="w-full bg-gray-100 rounded-full h-1.5">
                               <div
-                                className={`h-1.5 rounded-full ${nama === "Pelepasan 2" ? "bg-green-500" : "bg-blue-400"}`}
-                                style={{ width: `${peratus}%` }}
+                                className={`h-1.5 rounded-full ${nama === "Pelepasan 2" ? "bg-green-500" : ""}`}
+                                style={nama !== "Pelepasan 2" ? { width: `${peratus}%`, backgroundColor: "#a4d8ff" } : { width: `${peratus}%` }}
                               />
                             </div>
                           </div>
@@ -172,7 +168,7 @@ export default async function DashboardPage() {
 
                     {/* Senarai nama murid */}
                     <details className="group">
-                      <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 font-medium list-none flex items-center gap-1">
+                      <summary className="text-xs cursor-pointer font-medium list-none flex items-center gap-1" style={{ color: "#35393c" }}>
                         <span className="group-open:rotate-90 inline-block transition-transform">▶</span>
                         Lihat senarai murid
                       </summary>
@@ -220,10 +216,12 @@ export default async function DashboardPage() {
               const isLast = nama === "Pelepasan 2"
               return (
                 <div key={nama} className={`rounded-xl border p-4 ${isLast ? "border-green-300 bg-green-50" : "bg-white border-gray-200"}`}>
-                  <div className={`text-xs font-semibold mb-2 ${isLast ? "text-green-600" : "text-blue-600"}`}>
+                  <div className={`text-xs font-semibold mb-2 ${isLast ? "text-green-600" : ""}`}
+                    style={!isLast ? { color: "#35393c" } : {}}>
                     {nama}
                   </div>
-                  <div className={`text-3xl font-bold ${isLast ? "text-green-600" : "text-blue-600"}`}>
+                  <div className={`text-3xl font-bold ${isLast ? "text-green-600" : ""}`}
+                    style={!isLast ? { color: "#35393c" } : {}}>
                     {s ? kuasai : "—"}
                     {s && <span className="text-base font-normal text-gray-400">/{total}</span>}
                   </div>
@@ -232,8 +230,8 @@ export default async function DashboardPage() {
                     <>
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                         <div
-                          className={`h-2 rounded-full ${isLast ? "bg-green-500" : "bg-blue-400"}`}
-                          style={{ width: `${peratus}%` }}
+                          className={`h-2 rounded-full ${isLast ? "bg-green-500" : ""}`}
+                          style={!isLast ? { width: `${peratus}%`, backgroundColor: "#a4d8ff" } : { width: `${peratus}%` }}
                         />
                       </div>
                       <div className="flex justify-between text-xs text-gray-400">

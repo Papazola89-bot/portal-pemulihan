@@ -53,7 +53,8 @@ export default function JadualPage() {
       <div className="flex gap-3">
         <button
           onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true) }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#35393c" }}
         >
           + Tambah Slot
         </button>
@@ -61,7 +62,7 @@ export default function JadualPage() {
 
       {showForm && (
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-700 mb-4">{editId ? "Edit Slot" : "Tambah Slot Baru"}</h3>
+          <h3 className="font-semibold mb-4" style={{ color: "#35393c" }}>{editId ? "Edit Slot" : "Tambah Slot Baru"}</h3>
           <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Hari</label>
@@ -93,7 +94,8 @@ export default function JadualPage() {
             </div>
             <div className="sm:col-span-2 lg:col-span-4 flex gap-2">
               <button type="submit" disabled={loading}
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                className="text-white px-5 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                style={{ backgroundColor: "#35393c" }}>
                 {loading ? "Menyimpan..." : "Simpan"}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
@@ -111,7 +113,9 @@ export default function JadualPage() {
           const slots = jadual.filter((j) => j.hari === hari)
           return (
             <div key={hari} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="bg-blue-700 text-white text-center py-2 text-sm font-semibold">{hari}</div>
+              <div className="text-white text-center py-2 text-sm font-semibold" style={{ backgroundColor: "#35393c" }}>
+                {hari}
+              </div>
               <div className="p-2 space-y-2 min-h-24">
                 {slots.length === 0 ? (
                   <div className="text-xs text-gray-300 text-center pt-4">Tiada kelas</div>
@@ -139,7 +143,7 @@ export default function JadualPage() {
                           </div>
                         )}
                         <div className="flex gap-2 mt-1.5 border-t border-black/5 pt-1">
-                          <button onClick={() => handleEdit(j)} className="text-xs text-gray-400 hover:text-blue-600">Edit</button>
+                          <button onClick={() => handleEdit(j)} className="text-xs text-gray-400 hover:text-gray-700">Edit</button>
                           <button onClick={() => handleDelete(j.id)} className="text-xs text-gray-400 hover:text-red-600">Padam</button>
                         </div>
                       </div>

@@ -94,7 +94,8 @@ export default function SaringanPage() {
         </select>
         {saringanList.length < 3 && (
           <button onClick={ensureSaringan} disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}>
             {loading ? "Mencipta..." : "Jana Saringan Tahun " + tahun}
           </button>
         )}
@@ -106,13 +107,20 @@ export default function SaringanPage() {
           {saringanList.map((s) => {
             const kBM = s.ticks.filter((t) => t.kuasaiBM).length
             const kMat = s.ticks.filter((t) => t.kuasaiMat).length
+            const isActive = selected === s.id
             return (
               <button key={s.id} onClick={() => setSelected(s.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${selected === s.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={isActive
+                  ? { backgroundColor: "#35393c", color: "#ffffff" }
+                  : { backgroundColor: "#f3f4f6", color: "#374151" }
+                }>
                 {s.nama}
-                <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full
-                  ${selected === s.id ? "bg-blue-500" : "bg-gray-200 text-gray-600"}`}>
+                <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
+                  style={isActive
+                    ? { backgroundColor: "#a4d8ff", color: "#35393c" }
+                    : { backgroundColor: "#e5e7eb", color: "#6b7280" }
+                  }>
                   BM:{kBM} Mat:{kMat}
                 </span>
               </button>
@@ -124,15 +132,14 @@ export default function SaringanPage() {
       {/* Summary bar */}
       {currentSaringan && muridList.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-          <span className="text-sm font-medium text-gray-700">{currentSaringan.nama} — Tahun {tahun}</span>
+          <span className="text-sm font-medium" style={{ color: "#35393c" }}>{currentSaringan.nama} — Tahun {tahun}</span>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-blue-700 font-medium">Bahasa Melayu</span>
-              <span className="text-xs font-bold text-blue-600">{kuasaiBMCount}/{totalCount} ({totalCount > 0 ? Math.round((kuasaiBMCount / totalCount) * 100) : 0}%)</span>
+              <span className="text-xs font-medium" style={{ color: "#35393c" }}>Bahasa Melayu</span>
+              <span className="text-xs font-bold" style={{ color: "#35393c" }}>{kuasaiBMCount}/{totalCount} ({totalCount > 0 ? Math.round((kuasaiBMCount / totalCount) * 100) : 0}%)</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2.5">
-              <div className="bg-blue-500 h-2.5 rounded-full transition-all"
-                style={{ width: `${totalCount > 0 ? (kuasaiBMCount / totalCount) * 100 : 0}%` }} />
+              <div className="h-2.5 rounded-full transition-all" style={{ width: `${totalCount > 0 ? (kuasaiBMCount / totalCount) * 100 : 0}%`, backgroundColor: "#a4d8ff" }} />
             </div>
           </div>
           <div>
@@ -151,11 +158,12 @@ export default function SaringanPage() {
       {/* Murid tick list */}
       {currentSaringan && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <span className="font-medium text-gray-700">{currentSaringan.nama}</span>
+          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between" style={{ backgroundColor: "#dff0ff" }}>
+            <span className="font-medium" style={{ color: "#35393c" }}>{currentSaringan.nama}</span>
             <div className="flex items-center gap-3">
               <button onClick={exportExcel}
-                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-medium">
+                className="text-xs text-white px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: "#35393c" }}>
                 📊 Export Excel
               </button>
               <button onClick={() => handleDeleteSaringan(currentSaringan.id)}
@@ -166,10 +174,10 @@ export default function SaringanPage() {
             <div className="p-8 text-center text-gray-400 text-sm">Tiada murid untuk tahun {tahun}. Tambah murid dahulu.</div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_100px_100px] px-5 py-2 bg-gray-50 text-xs font-semibold text-gray-500 border-b border-gray-100">
-                <span>Nama Murid</span>
-                <span className="text-center text-blue-600">BM</span>
-                <span className="text-center text-green-600">Matematik</span>
+              <div className="grid grid-cols-[1fr_100px_100px] px-5 py-2 text-xs font-semibold border-b border-gray-100" style={{ backgroundColor: "#f8fbff" }}>
+                <span className="text-gray-500">Nama Murid</span>
+                <span className="text-center font-bold" style={{ color: "#35393c" }}>BM</span>
+                <span className="text-center text-green-600 font-bold">Matematik</span>
               </div>
               <div className="divide-y divide-gray-100">
                 {muridList.map((m) => {
@@ -179,14 +187,17 @@ export default function SaringanPage() {
                   return (
                     <div key={m.id} className="grid grid-cols-[1fr_100px_100px] items-center px-5 py-3 hover:bg-gray-50">
                       <div>
-                        <div className="text-sm font-medium text-gray-800">{m.nama}</div>
+                        <div className="text-sm font-medium" style={{ color: "#35393c" }}>{m.nama}</div>
                         <div className="text-xs text-gray-400">{m.kelas}</div>
                       </div>
                       <div className="flex justify-center">
                         <button
                           onClick={() => toggleTick(currentSaringan.id, m.id, "kuasaiBM", kuasaiBM)}
-                          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors text-xs font-bold
-                            ${kuasaiBM ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 hover:border-blue-400"}`}
+                          className="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors text-xs font-bold"
+                          style={kuasaiBM
+                            ? { backgroundColor: "#a4d8ff", borderColor: "#a4d8ff", color: "#35393c" }
+                            : { borderColor: "#d1d5db" }
+                          }
                         >
                           {kuasaiBM && "✓"}
                         </button>

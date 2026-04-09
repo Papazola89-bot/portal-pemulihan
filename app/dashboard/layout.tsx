@@ -22,12 +22,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-blue-900 text-white flex flex-col transform transition-transform duration-200 ease-in-out
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0`}
+        style={{ backgroundColor: "#35393c" }}
       >
-        <div className="p-5 border-b border-blue-700">
-          <div className="text-lg font-bold leading-tight">Portal Pemulihan Khas</div>
-          <div className="text-xs text-blue-300 mt-1">SK Semangar</div>
+        <div className="p-5 border-b border-white/10">
+          <div className="text-lg font-bold leading-tight text-white">Portal Pemulihan Khas</div>
+          <div className="text-xs mt-1" style={{ color: "#a4d8ff" }}>SK Semangar</div>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
@@ -41,7 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${active ? "bg-blue-700 text-white" : "text-blue-200 hover:bg-blue-800 hover:text-white"}`}
+                  ${active ? "text-brand font-semibold" : "text-white/60 hover:text-white hover:bg-white/10"}`}
+                style={active ? { backgroundColor: "#a4d8ff", color: "#35393c" } : {}}
               >
                 <span>{item.icon}</span>
                 {item.label}
@@ -49,10 +51,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )
           })}
         </nav>
-        <div className="p-4 border-t border-blue-700">
+        <div className="p-4 border-t border-white/10">
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-200 hover:text-white hover:bg-blue-800 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <span>🚪</span> Log Keluar
           </button>
@@ -77,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             ☰
           </button>
-          <h1 className="text-base font-semibold text-gray-700">
+          <h1 className="text-base font-semibold" style={{ color: "#35393c" }}>
             {navItems.find((n) =>
               n.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(n.href)
             )?.label ?? "Dashboard"}
