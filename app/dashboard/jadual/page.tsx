@@ -6,7 +6,11 @@ type Jadual = { id: string; hari: string; masa: string; subjek: string; kelas: s
 
 const HARI = ["Isnin", "Selasa", "Rabu", "Khamis", "Jumaat"]
 const HARI_ORDER: Record<string, number> = { Isnin: 1, Selasa: 2, Rabu: 3, Khamis: 4, Jumaat: 5 }
-const emptyForm = { hari: "Isnin", masa: "", subjek: "Bahasa Melayu", kelas: "" }
+const emptyForm = { hari: "Isnin", masaMula: "", masaTamat: "", subjek: "Bahasa Melayu", kelas: "" }
+
+function masaString(mula: string, tamat: string) {
+  return `${mula} - ${tamat}`
+}
 
 function parseMasaKeMinit(masa: string): number {
   const match = masa.match(/(\d+):(\d+)\s*-\s*(\d+):(\d+)/)
@@ -47,10 +51,16 @@ export default function JadualPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    const payload = {
+      hari: form.hari,
+      masa: masaString(form.masaMula, form.masaTamat),
+      subjek: form.subjek,
+      kelas: form.kelas,
+    }
     if (editId) {
-      await fetch(`/api/jadual/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
+      await fetch(`/api/jadual/${editId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
     } else {
-      await fetch("/api/jadual", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
+      await fetch("/api/jadual", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
     }
     setForm(emptyForm)
     setEditId(null)
@@ -66,12 +76,15 @@ export default function JadualPage() {
   }
 
   function handleEdit(j: Jadual) {
-    setForm({ hari: j.hari, masa: j.masa, subjek: j.subjek, kelas: j.kelas ?? "" })
+    // Parse "HH:MM - HH:MM" back to two fields
+    const match = j.masa.match(/(\d+:\d+)\s*-\s*(\d+:\d+)/)
+    const masaMula = match ? match[1] : ""
+    const masaTamat = match ? match[2] : ""
+    setForm({ hari: j.hari, masaMula, masaTamat, subjek: j.subjek, kelas: j.kelas ?? "" })
     setEditId(j.id)
     setShowForm(true)
   }
 
-  // Susun mengikut hari dan masa
   const jadualSusun = [...jadual].sort((a, b) => {
     const hariDiff = (HARI_ORDER[a.hari] ?? 0) - (HARI_ORDER[b.hari] ?? 0)
     if (hariDiff !== 0) return hariDiff
@@ -106,7 +119,7 @@ export default function JadualPage() {
           <h3 className="font-semibold mb-4" style={{ color: "#35393c" }}>
             {editId ? "Edit Slot" : "Tambah Slot Baru"}
           </h3>
-          <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Hari</label>
               <select value={form.hari} onChange={(e) => setForm({ ...form, hari: e.target.value })}
@@ -115,9 +128,13 @@ export default function JadualPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Masa</label>
-              <input value={form.masa} onChange={(e) => setForm({ ...form, masa: e.target.value })}
-                placeholder="cth: 8:00 - 9:00"
+              <label className="block text-sm font-medium text-gray-600 mb-1">Masa Mula</label>
+              <input type="time" value={form.masaMula} onChange={(e) => setForm({ ...form, masaMula: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Masa Tamat</label>
+              <input type="time" value={form.masaTamat} onChange={(e) => setForm({ ...form, masaTamat: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black" required />
             </div>
             <div>
@@ -138,7 +155,7 @@ export default function JadualPage() {
                 disabled={isPersediaan}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black disabled:bg-gray-50 disabled:text-gray-400" />
             </div>
-            <div className="sm:col-span-2 lg:col-span-4 flex gap-2">
+            <div className="sm:col-span-2 lg:col-span-3 flex gap-2">
               <button type="submit" disabled={loading}
                 className="text-white px-5 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                 style={{ backgroundColor: "#35393c" }}>
@@ -153,7 +170,7 @@ export default function JadualPage() {
         </div>
       )}
 
-      {/* Jadual dalam bentuk table */}
+      {/* Jadual table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-3 border-b font-medium" style={{ backgroundColor: "#dff0ff", color: "#35393c", borderColor: "#a4d8ff" }}>
           Jadual Kelas Minggu
@@ -168,6 +185,7 @@ export default function JadualPage() {
                   <th className="text-left px-4 py-3 font-medium w-10" style={{ color: "#35393c" }}>Bil</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Hari</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Masa</th>
+                  <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tempoh</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Subjek</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Kelas</th>
                   <th className="text-right px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tindakan</th>
@@ -176,11 +194,13 @@ export default function JadualPage() {
               <tbody>
                 {jadualSusun.map((j, i) => {
                   const warna = WARNA_SUBJEK[j.subjek] ?? { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" }
+                  const minit = parseMasaKeMinit(j.masa)
                   return (
                     <tr key={j.id} className="border-t border-gray-100 hover:bg-gray-50">
                       <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
                       <td className="px-4 py-3 font-medium" style={{ color: "#35393c" }}>{j.hari}</td>
                       <td className="px-4 py-3 text-gray-600 font-mono text-xs">{j.masa}</td>
+                      <td className="px-4 py-3 text-xs text-gray-500">{minit > 0 ? `${minit} min` : "—"}</td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-0.5 rounded-full text-xs font-medium border"
                           style={{ backgroundColor: warna.bg, color: warna.text, borderColor: warna.border }}>
@@ -203,14 +223,13 @@ export default function JadualPage() {
         )}
       </div>
 
-      {/* Rumusan Jadual */}
+      {/* Rumusan */}
       {jadual.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-3 border-b font-medium" style={{ backgroundColor: "#35393c", color: "#ffffff" }}>
             Rumusan Jadual Kelas
           </div>
           <div className="p-5 space-y-4">
-            {/* Jumlah keseluruhan */}
             <div className="rounded-xl p-4 flex items-center justify-between"
               style={{ backgroundColor: "#dff0ff", border: "1px solid #a4d8ff" }}>
               <div>
@@ -223,7 +242,6 @@ export default function JadualPage() {
               <div className="text-4xl opacity-20">📅</div>
             </div>
 
-            {/* Pecahan mengikut subjek */}
             <div className="grid sm:grid-cols-3 gap-3">
               {Object.entries(jumlahSubjek).map(([subjek, minit]) => {
                 const warna = WARNA_SUBJEK[subjek] ?? { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" }
@@ -233,9 +251,7 @@ export default function JadualPage() {
                   <div key={subjek} className="rounded-xl border p-4"
                     style={{ backgroundColor: warna.bg, borderColor: warna.border }}>
                     <div className="text-xs font-semibold mb-1" style={{ color: warna.text }}>{subjek}</div>
-                    <div className="text-xl font-bold" style={{ color: warna.text }}>
-                      {formatJamMinit(minit)}
-                    </div>
+                    <div className="text-xl font-bold" style={{ color: warna.text }}>{formatJamMinit(minit)}</div>
                     <div className="text-xs mt-1" style={{ color: warna.text, opacity: 0.7 }}>
                       {minit} minit • {bilSlot} slot
                     </div>
