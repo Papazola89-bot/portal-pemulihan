@@ -93,12 +93,15 @@ export default function JadualPage() {
 
   // Kira rumusan
   const jumlahSubjek: Record<string, number> = {}
+  const jumlahKelas: Record<string, number> = {}
   let jumlahKeseluruhan = 0
   for (const j of jadual) {
     const minit = parseMasaKeMinit(j.masa)
     jumlahSubjek[j.subjek] = (jumlahSubjek[j.subjek] ?? 0) + minit
+    if (j.kelas) jumlahKelas[j.kelas] = (jumlahKelas[j.kelas] ?? 0) + minit
     jumlahKeseluruhan += minit
   }
+  const kelasUrutkan = Object.entries(jumlahKelas).sort((a, b) => b[1] - a[1])
 
   const isPersediaan = form.subjek === "Persediaan"
 
@@ -242,29 +245,73 @@ export default function JadualPage() {
               <div className="text-4xl opacity-20">📅</div>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-3">
-              {Object.entries(jumlahSubjek).map(([subjek, minit]) => {
-                const warna = WARNA_SUBJEK[subjek] ?? { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" }
-                const peratus = jumlahKeseluruhan > 0 ? Math.round((minit / jumlahKeseluruhan) * 100) : 0
-                const bilSlot = jadual.filter((j) => j.subjek === subjek).length
-                return (
-                  <div key={subjek} className="rounded-xl border p-4"
-                    style={{ backgroundColor: warna.bg, borderColor: warna.border }}>
-                    <div className="text-xs font-semibold mb-1" style={{ color: warna.text }}>{subjek}</div>
-                    <div className="text-xl font-bold" style={{ color: warna.text }}>{formatJamMinit(minit)}</div>
-                    <div className="text-xs mt-1" style={{ color: warna.text, opacity: 0.7 }}>
-                      {minit} minit • {bilSlot} slot
+            {/* Pecahan mengikut subjek */}
+            <div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Mengikut Subjek</div>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {Object.entries(jumlahSubjek).map(([subjek, minit]) => {
+                  const warna = WARNA_SUBJEK[subjek] ?? { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" }
+                  const peratus = jumlahKeseluruhan > 0 ? Math.round((minit / jumlahKeseluruhan) * 100) : 0
+                  const bilSlot = jadual.filter((j) => j.subjek === subjek).length
+                  return (
+                    <div key={subjek} className="rounded-xl border p-4"
+                      style={{ backgroundColor: warna.bg, borderColor: warna.border }}>
+                      <div className="text-xs font-semibold mb-1" style={{ color: warna.text }}>{subjek}</div>
+                      <div className="text-xl font-bold" style={{ color: warna.text }}>{formatJamMinit(minit)}</div>
+                      <div className="text-xs mt-1" style={{ color: warna.text, opacity: 0.7 }}>
+                        {minit} minit • {bilSlot} slot
+                      </div>
+                      <div className="mt-2 w-full bg-white/60 rounded-full h-1.5">
+                        <div className="h-1.5 rounded-full" style={{ width: `${peratus}%`, backgroundColor: warna.text, opacity: 0.4 }} />
+                      </div>
+                      <div className="text-xs mt-1 font-medium" style={{ color: warna.text, opacity: 0.6 }}>
+                        {peratus}% daripada jumlah
+                      </div>
                     </div>
-                    <div className="mt-2 w-full bg-white/60 rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full" style={{ width: `${peratus}%`, backgroundColor: warna.text, opacity: 0.4 }} />
-                    </div>
-                    <div className="text-xs mt-1 font-medium" style={{ color: warna.text, opacity: 0.6 }}>
-                      {peratus}% daripada jumlah
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
+
+            {/* Pecahan mengikut kelas */}
+            {kelasUrutkan.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Mengikut Kelas</div>
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ backgroundColor: "#f8fbff" }}>
+                        <th className="text-left px-4 py-2.5 font-medium text-xs" style={{ color: "#35393c" }}>Kelas</th>
+                        <th className="text-left px-4 py-2.5 font-medium text-xs" style={{ color: "#35393c" }}>Jumlah Masa</th>
+                        <th className="text-left px-4 py-2.5 font-medium text-xs" style={{ color: "#35393c" }}>Bil Slot</th>
+                        <th className="px-4 py-2.5 text-xs" style={{ color: "#35393c", minWidth: 120 }}>Nisbah</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kelasUrutkan.map(([kelas, minit]) => {
+                        const peratus = jumlahKeseluruhan > 0 ? Math.round((minit / jumlahKeseluruhan) * 100) : 0
+                        const bilSlot = jadual.filter((j) => j.kelas === kelas).length
+                        return (
+                          <tr key={kelas} className="border-t border-gray-100 hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium" style={{ color: "#35393c" }}>{kelas}</td>
+                            <td className="px-4 py-3 text-gray-700">{formatJamMinit(minit)}</td>
+                            <td className="px-4 py-3 text-gray-500 text-xs">{bilSlot} slot</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                  <div className="h-2 rounded-full" style={{ width: `${peratus}%`, backgroundColor: "#a4d8ff" }} />
+                                </div>
+                                <span className="text-xs text-gray-400 w-8">{peratus}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
