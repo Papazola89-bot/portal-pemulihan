@@ -18,8 +18,9 @@ export default async function DashboardPage() {
   const jumlahBMdanMT = muridList.filter((m) => m.jenisPemulihan === "Bahasa Melayu dan Matematik").length
   const jumlahLain = muridList.length - jumlahBM - jumlahMT - jumlahBMdanMT
 
-  const pelepasan2 = saringanList.find((s) => s.nama.toLowerCase().includes("pelepasan 2"))
-  const muridKePerdanaSemua = pelepasan2 ? pelepasan2.ticks.filter((t) => t.kuasai).map((t) => t.muridId) : []
+  const muridKePerdanaSemua = [...new Set(
+    saringanList.flatMap((s) => s.ticks.filter((t) => t.kuasai).map((t) => t.muridId))
+  )]
 
   const kelasUnik = [...new Set(muridList.map((m) => m.kelas))].sort()
   const saringanNama = ["Pengesanan", "Pelepasan 1", "Pelepasan 2"]
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
           <div className="rounded-xl border bg-green-50 border-green-300 p-4">
             <div className="text-xs text-green-600 font-semibold">🎓 Ke Kelas Perdana</div>
             <div className="text-3xl font-bold text-green-600 mt-1">{muridKePerdanaSemua.length}</div>
-            <div className="text-xs text-gray-400 mt-1">Lulus Pelepasan 2</div>
+            <div className="text-xs text-gray-400 mt-1">Lulus mana-mana saringan</div>
           </div>
         </div>
 
