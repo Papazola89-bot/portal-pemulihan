@@ -14,14 +14,15 @@ model User {
 }
 
 model Murid {
-  id             String          @id @default(cuid())
-  nama           String
-  kelas          String
-  jenisPemulihan String
-  tahun          Int
-  createdAt      DateTime        @default(now())
-  kemahiranTicks KemahiranTick[]
-  saringanTicks  SaringanTick[]
+  id               String           @id @default(cuid())
+  nama             String
+  kelas            String
+  jenisPemulihan   String
+  tahun            Int
+  createdAt        DateTime         @default(now())
+  kemahiranTicks   KemahiranTick[]
+  saringanTicks    SaringanTick[]
+  headcountEntries HeadcountEntry[]
 }
 
 model Subjek {
@@ -77,4 +78,22 @@ model SaringanTick {
   murid      Murid    @relation(fields: [muridId], references: [id], onDelete: Cascade)
 
   @@unique([saringanId, muridId])
+}
+
+model HeadcountEntry {
+  id      String @id @default(cuid())
+  muridId String
+  murid   Murid  @relation(fields: [muridId], references: [id], onDelete: Cascade)
+  tahun   Int
+  subjek  String
+  tov     Int    @default(0)
+  oti1    Int    @default(0)
+  ar1     Int    @default(0)
+  oti2    Int    @default(0)
+  ar2     Int    @default(0)
+  oti3    Int    @default(0)
+  ar3     Int    @default(0)
+  etr     Int    @default(0)
+
+  @@unique([muridId, tahun, subjek])
 }

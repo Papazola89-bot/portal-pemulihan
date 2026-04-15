@@ -11,6 +11,8 @@ const navItems = [
   { href: "/dashboard/jadual", label: "Jadual Kelas", icon: "📅" },
   { href: "/dashboard/kemahiran", label: "Laporan Kemahiran", icon: "📊" },
   { href: "/dashboard/saringan", label: "Data Saringan", icon: "✅" },
+  { href: "/dashboard/perkembangan", label: "Rekod Perkembangan", icon: "📈" },
+  { href: "/dashboard/headcount", label: "Headcount", icon: "📋" },
   { href: "/dashboard/tetapan", label: "Tetapan", icon: "⚙️" },
 ]
 
