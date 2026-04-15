@@ -87,23 +87,30 @@ export default function SaringanPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 items-center">
-        <select value={tahun} onChange={(e) => { setTahun(e.target.value); setSelected("") }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
-          {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        {saringanList.length < 3 && (
-          <button onClick={ensureSaringan} disabled={loading}
-            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-            style={{ backgroundColor: "#35393c" }}>
-            {loading ? "Mencipta..." : "Jana Saringan Tahun " + tahun}
-          </button>
-        )}
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex flex-wrap gap-3 items-center print:hidden">
+          <select value={tahun} onChange={(e) => { setTahun(e.target.value); setSelected("") }}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
+            {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          {saringanList.length < 3 && (
+            <button onClick={ensureSaringan} disabled={loading}
+              className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              style={{ backgroundColor: "#35393c" }}>
+              {loading ? "Mencipta..." : "Jana Saringan Tahun " + tahun}
+            </button>
+          )}
+        </div>
+        <button onClick={() => window.print()}
+          className="print:hidden text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#35393c" }}>
+          🖨️ Cetak / PDF
+        </button>
       </div>
 
       {/* Saringan tabs */}
       {saringanList.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="print:hidden flex gap-2 flex-wrap">
           {saringanList.map((s) => {
             const kBM = s.ticks.filter((t) => t.kuasaiBM).length
             const kMat = s.ticks.filter((t) => t.kuasaiMat).length
@@ -162,12 +169,12 @@ export default function SaringanPage() {
             <span className="font-medium" style={{ color: "#35393c" }}>{currentSaringan.nama}</span>
             <div className="flex items-center gap-3">
               <button onClick={exportExcel}
-                className="text-xs text-white px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                className="print:hidden text-xs text-white px-3 py-1.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: "#35393c" }}>
                 📊 Export Excel
               </button>
               <button onClick={() => handleDeleteSaringan(currentSaringan.id)}
-                className="text-xs text-red-400 hover:text-red-600">Padam Saringan</button>
+                className="print:hidden text-xs text-red-400 hover:text-red-600">Padam Saringan</button>
             </div>
           </div>
           {muridList.length === 0 ? (

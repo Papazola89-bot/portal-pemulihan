@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import PrintButton from "./_components/PrintButton"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -28,13 +29,16 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold" style={{ color: "#35393c" }}>
-          Selamat Datang, {session?.user?.name ?? "Guru"} 👋
-        </h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Kelas Pemulihan Khas — SK Semangar — Tahun {tahunSemasa}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: "#35393c" }}>
+            Selamat Datang, {session?.user?.name ?? "Guru"} 👋
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Kelas Pemulihan Khas — SK Semangar — Tahun {tahunSemasa}
+          </p>
+        </div>
+        <PrintButton />
       </div>
 
       {/* ── BAHAGIAN 1: Ringkasan Keseluruhan ── */}

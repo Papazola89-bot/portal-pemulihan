@@ -78,24 +78,33 @@ export default function PerkembanganPage() {
   return (
     <div className="space-y-4">
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <select
-          value={tahun}
-          onChange={(e) => setTahun(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
-        >
-          {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <select
-          value={selectedMurid}
-          onChange={(e) => setSelectedMurid(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black min-w-56"
-        >
-          <option value="">-- Pilih Murid --</option>
-          {muridList.map((m) => (
-            <option key={m.id} value={m.id}>{m.nama} ({m.kelas})</option>
-          ))}
-        </select>
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="print:hidden flex flex-wrap gap-3 items-center">
+          <select
+            value={tahun}
+            onChange={(e) => setTahun(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
+          >
+            {tahunOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select
+            value={selectedMurid}
+            onChange={(e) => setSelectedMurid(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black min-w-56"
+          >
+            <option value="">-- Pilih Murid --</option>
+            {muridList.map((m) => (
+              <option key={m.id} value={m.id}>{m.nama} ({m.kelas})</option>
+            ))}
+          </select>
+        </div>
+        {selectedMurid && (
+          <button onClick={() => window.print()}
+            className="print:hidden text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}>
+            🖨️ Cetak / PDF
+          </button>
+        )}
       </div>
 
       {!selectedMurid && (
@@ -137,7 +146,7 @@ export default function PerkembanganPage() {
               style={{ backgroundColor: "#dff0ff", borderColor: "#a4d8ff" }}>
               <span className="font-medium" style={{ color: "#35393c" }}>Penguasaan Kemahiran</span>
               {/* Subjek tabs */}
-              <div className="flex gap-1">
+              <div className="print:hidden flex gap-1">
                 {subjekList.map((s) => (
                   <button key={s.id} onClick={() => setSelectedSubjek(s.id)}
                     className="px-3 py-1 rounded-lg text-xs font-medium transition-colors"

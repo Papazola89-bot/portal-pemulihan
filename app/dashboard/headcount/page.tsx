@@ -167,7 +167,7 @@ export default function HeadcountPage() {
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex gap-3 items-center">
+        <div className="print:hidden flex gap-3 items-center">
           <select
             value={tahun}
             onChange={(e) => setTahun(e.target.value)}
@@ -192,13 +192,22 @@ export default function HeadcountPage() {
             ))}
           </div>
         </div>
-        <button
-          onClick={exportExcel}
-          className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: "#35393c" }}
-        >
-          📥 Export Excel
-        </button>
+        <div className="print:hidden flex gap-2">
+          <button
+            onClick={exportExcel}
+            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}
+          >
+            📥 Export Excel
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}
+          >
+            🖨️ Cetak / PDF
+          </button>
+        </div>
       </div>
 
       {/* Table */}
