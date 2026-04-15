@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 type Jadual = { id: string; hari: string; masa: string; subjek: string; kelas: string }
+type JadualArchive = { id: string; label: string; createdAt: string; data: Jadual[] }
 
 const HARI = ["Isnin", "Selasa", "Rabu", "Khamis", "Jumaat"]
 const HARI_ORDER: Record<string, number> = { Isnin: 1, Selasa: 2, Rabu: 3, Khamis: 4, Jumaat: 5 }
@@ -34,6 +35,51 @@ const WARNA_SUBJEK: Record<string, { bg: string; text: string; border: string }>
   "Persediaan":    { bg: "#dff0ff", text: "#35393c", border: "#a4d8ff" },
 }
 
+function JadualTable({ data }: { data: Jadual[] }) {
+  const susun = [...data].sort((a, b) => {
+    const hariDiff = (HARI_ORDER[a.hari] ?? 0) - (HARI_ORDER[b.hari] ?? 0)
+    if (hariDiff !== 0) return hariDiff
+    return a.masa.localeCompare(b.masa)
+  })
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr style={{ backgroundColor: "#dff0ff" }}>
+          <th className="text-left px-4 py-3 font-medium w-10" style={{ color: "#35393c" }}>Bil</th>
+          <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Hari</th>
+          <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Masa</th>
+          <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tempoh</th>
+          <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Subjek</th>
+          <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Kelas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {susun.map((j, i) => {
+          const warna = WARNA_SUBJEK[j.subjek] ?? { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" }
+          const minit = parseMasaKeMinit(j.masa)
+          return (
+            <tr key={j.id} className="border-t border-gray-100">
+              <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+              <td className="px-4 py-3 font-medium" style={{ color: "#35393c" }}>{j.hari}</td>
+              <td className="px-4 py-3 text-gray-600 font-mono text-xs">{j.masa}</td>
+              <td className="px-4 py-3 text-xs text-gray-500">{minit > 0 ? `${minit} min` : "—"}</td>
+              <td className="px-4 py-3">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium border"
+                  style={{ backgroundColor: warna.bg, color: warna.text, borderColor: warna.border }}>
+                  {j.subjek}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-gray-600 text-sm">
+                {j.kelas || <span className="text-gray-300 italic text-xs">—</span>}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
 export default function JadualPage() {
   const [jadual, setJadual] = useState<Jadual[]>([])
   const [form, setForm] = useState(emptyForm)
@@ -41,12 +87,27 @@ export default function JadualPage() {
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Archive state
+  const [archiveList, setArchiveList] = useState<JadualArchive[]>([])
+  const [showArchivePanel, setShowArchivePanel] = useState(false)
+  const [showSaveForm, setShowSaveForm] = useState(false)
+  const [archiveLabelInput, setArchiveLabelInput] = useState("")
+  const [savingArchive, setSavingArchive] = useState(false)
+  const [viewArchive, setViewArchive] = useState<JadualArchive | null>(null)
+  const [pulihingId, setPulihingId] = useState<string | null>(null)
+
   async function load() {
     const res = await fetch("/api/jadual")
     setJadual(await res.json())
   }
 
+  async function loadArchives() {
+    const res = await fetch("/api/jadual-archive")
+    setArchiveList(await res.json())
+  }
+
   useEffect(() => { load() }, [])
+  useEffect(() => { if (showArchivePanel) loadArchives() }, [showArchivePanel])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,13 +137,42 @@ export default function JadualPage() {
   }
 
   function handleEdit(j: Jadual) {
-    // Parse "HH:MM - HH:MM" back to two fields
     const match = j.masa.match(/(\d+:\d+)\s*-\s*(\d+:\d+)/)
     const masaMula = match ? match[1] : ""
     const masaTamat = match ? match[2] : ""
     setForm({ hari: j.hari, masaMula, masaTamat, subjek: j.subjek, kelas: j.kelas ?? "" })
     setEditId(j.id)
     setShowForm(true)
+  }
+
+  async function handleSaveArchive() {
+    if (!archiveLabelInput.trim()) return
+    setSavingArchive(true)
+    await fetch("/api/jadual-archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: archiveLabelInput.trim() }),
+    })
+    setArchiveLabelInput("")
+    setShowSaveForm(false)
+    setSavingArchive(false)
+    setShowArchivePanel(true)
+    loadArchives()
+  }
+
+  async function handleDeleteArchive(id: string) {
+    if (!confirm("Padam arkib ini?")) return
+    await fetch(`/api/jadual-archive/${id}`, { method: "DELETE" })
+    loadArchives()
+  }
+
+  async function handlePulihArchive(archive: JadualArchive) {
+    if (!confirm(`Pulihkan jadual "${archive.label}"? Jadual semasa akan diganti.`)) return
+    setPulihingId(archive.id)
+    await fetch(`/api/jadual-archive/${archive.id}/pulih`, { method: "POST" })
+    setPulihingId(null)
+    load()
+    setShowArchivePanel(false)
   }
 
   const jadualSusun = [...jadual].sort((a, b) => {
@@ -107,15 +197,163 @@ export default function JadualPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
-        <button
-          onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true) }}
-          className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: "#35393c" }}
-        >
-          + Tambah Slot
+      {/* Butang utama */}
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true) }}
+            className="print:hidden text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}
+          >
+            + Tambah Slot
+          </button>
+          <button
+            onClick={() => { setShowSaveForm(!showSaveForm); setShowArchivePanel(false) }}
+            className="print:hidden px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity border"
+            style={{ borderColor: "#a4d8ff", backgroundColor: "#dff0ff", color: "#35393c" }}
+          >
+            💾 Simpan Archive
+          </button>
+          <button
+            onClick={() => { setShowArchivePanel(!showArchivePanel); setShowSaveForm(false) }}
+            className="print:hidden px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity border"
+            style={showArchivePanel
+              ? { backgroundColor: "#35393c", color: "#ffffff", borderColor: "#35393c" }
+              : { backgroundColor: "#f3f4f6", color: "#374151", borderColor: "#e5e7eb" }
+            }
+          >
+            📂 Arkib {archiveList.length > 0 && `(${archiveList.length})`}
+          </button>
+        </div>
+        <button onClick={() => window.print()}
+          className="print:hidden text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#35393c" }}>
+          🖨️ Cetak / PDF
         </button>
       </div>
+
+      {/* Form simpan archive */}
+      {showSaveForm && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-wrap gap-3 items-center">
+          <span className="text-sm font-medium" style={{ color: "#35393c" }}>Nama arkib:</span>
+          <input
+            value={archiveLabelInput}
+            onChange={(e) => setArchiveLabelInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSaveArchive()}
+            placeholder="cth: Jadual Minggu 1, Jadual Selepas Cuti..."
+            autoFocus
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-black flex-1 min-w-48"
+          />
+          <button
+            onClick={handleSaveArchive}
+            disabled={savingArchive || !archiveLabelInput.trim()}
+            className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            style={{ backgroundColor: "#35393c" }}
+          >
+            {savingArchive ? "Menyimpan..." : "Simpan"}
+          </button>
+          <button onClick={() => setShowSaveForm(false)}
+            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200">
+            Batal
+          </button>
+        </div>
+      )}
+
+      {/* Panel arkib */}
+      {showArchivePanel && (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b font-medium flex items-center justify-between"
+            style={{ backgroundColor: "#35393c", color: "#ffffff" }}>
+            <span>📂 Arkib Jadual</span>
+            <span className="text-xs font-normal opacity-60">{archiveList.length} versi tersimpan</span>
+          </div>
+          {archiveList.length === 0 ? (
+            <div className="p-6 text-center text-sm text-gray-400 italic">
+              Tiada arkib lagi. Klik "💾 Simpan Archive" untuk simpan versi jadual semasa.
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {archiveList.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: "#35393c" }}>{a.label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(a.createdAt).toLocaleDateString("ms-MY", {
+                        day: "numeric", month: "long", year: "numeric",
+                        hour: "2-digit", minute: "2-digit"
+                      })}
+                      {" · "}{(a.data as Jadual[]).length} slot
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewArchive(a)}
+                      className="text-xs px-3 py-1.5 rounded-lg border font-medium hover:opacity-80 transition-opacity"
+                      style={{ borderColor: "#a4d8ff", backgroundColor: "#dff0ff", color: "#35393c" }}
+                    >
+                      👁️ Lihat
+                    </button>
+                    <button
+                      onClick={() => handlePulihArchive(a)}
+                      disabled={pulihingId === a.id}
+                      className="text-xs px-3 py-1.5 rounded-lg font-medium text-white hover:opacity-80 disabled:opacity-50 transition-opacity"
+                      style={{ backgroundColor: "#35393c" }}
+                    >
+                      {pulihingId === a.id ? "..." : "🔄 Pulihkan"}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteArchive(a.id)}
+                      className="text-xs px-3 py-1.5 rounded-lg text-red-400 hover:text-red-600 font-medium"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal lihat archive */}
+      {viewArchive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b"
+              style={{ backgroundColor: "#dff0ff", borderColor: "#a4d8ff" }}>
+              <div>
+                <h3 className="font-semibold" style={{ color: "#35393c" }}>{viewArchive.label}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {new Date(viewArchive.createdAt).toLocaleDateString("ms-MY", {
+                    day: "numeric", month: "long", year: "numeric",
+                    hour: "2-digit", minute: "2-digit"
+                  })}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="text-white text-sm px-3 py-1.5 rounded-lg font-medium hover:opacity-90"
+                  style={{ backgroundColor: "#35393c" }}
+                >
+                  🖨️ Cetak / PDF
+                </button>
+                <button onClick={() => setViewArchive(null)}
+                  className="text-gray-500 hover:text-gray-800 text-xl font-bold px-2">✕</button>
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {(viewArchive.data as Jadual[]).length === 0 ? (
+                <div className="p-8 text-center text-gray-400 text-sm">Tiada slot dalam arkib ini.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <JadualTable data={viewArchive.data as Jadual[]} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white border border-gray-200 rounded-xl p-5">
@@ -191,7 +429,7 @@ export default function JadualPage() {
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tempoh</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Subjek</th>
                   <th className="text-left px-4 py-3 font-medium" style={{ color: "#35393c" }}>Kelas</th>
-                  <th className="text-right px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tindakan</th>
+                  <th className="print:hidden text-right px-4 py-3 font-medium" style={{ color: "#35393c" }}>Tindakan</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +451,7 @@ export default function JadualPage() {
                       <td className="px-4 py-3 text-gray-600 text-sm">
                         {j.kelas || <span className="text-gray-300 italic text-xs">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-right space-x-3">
+                      <td className="print:hidden px-4 py-3 text-right space-x-3">
                         <button onClick={() => handleEdit(j)} className="text-xs font-medium hover:opacity-70" style={{ color: "#35393c" }}>Edit</button>
                         <button onClick={() => handleDelete(j.id)} className="text-xs text-red-400 hover:text-red-600 font-medium">Padam</button>
                       </td>

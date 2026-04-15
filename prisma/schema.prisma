@@ -80,6 +80,13 @@ model SaringanTick {
   @@unique([saringanId, muridId])
 }
 
+model JadualArchive {
+  id        String   @id @default(cuid())
+  label     String
+  data      Json
+  createdAt DateTime @default(now())
+}
+
 model HeadcountEntry {
   id      String @id @default(cuid())
   muridId String
