@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react"
 import * as XLSX from "xlsx"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 type Murid = { id: string; nama: string; kelas: string; jenisPemulihan: string; tahun: number }
 
@@ -80,6 +82,61 @@ export default function MuridPage() {
     XLSX.writeFile(wb, `Senarai_Murid_${tahun}.xlsx`)
   }
 
+  function exportPDF() {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+
+    // Header
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text("Senarai Murid Pemulihan Khas", 105, 20, { align: "center" })
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "normal")
+    doc.text("SK Semangar", 105, 27, { align: "center" })
+    doc.text(`Tahun ${tahun}`, 105, 33, { align: "center" })
+
+    // Ringkasan
+    const jumlahBM = murid.filter((m) => m.jenisPemulihan === "Bahasa Melayu").length
+    const jumlahMT = murid.filter((m) => m.jenisPemulihan === "Matematik").length
+    const jumlahBMdanMT = murid.filter((m) => m.jenisPemulihan === "Bahasa Melayu dan Matematik").length
+
+    doc.setFontSize(9)
+    doc.text(`Jumlah Murid: ${murid.length}   |   BM: ${jumlahBM}   |   MT: ${jumlahMT}   |   BM & MT: ${jumlahBMdanMT}`, 105, 40, { align: "center" })
+
+    // Jadual
+    autoTable(doc, {
+      startY: 46,
+      head: [["Bil", "Nama Murid", "Kelas", "Jenis Pemulihan"]],
+      body: murid.map((m, i) => [
+        i + 1,
+        m.nama,
+        m.kelas,
+        m.jenisPemulihan,
+      ]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [53, 57, 60], textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 248, 255] },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 12 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 55 },
+      },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Footer
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setTextColor(150)
+      doc.text(`Dijana dari Portal Pemulihan Khas SK Semangar`, 14, 287)
+      doc.text(`Halaman ${i} / ${pageCount}`, 196, 287, { align: "right" })
+    }
+
+    doc.save(`Senarai_Murid_${tahun}.pdf`)
+  }
+
   function downloadTemplate() {
     const tahunSemasa = new Date().getFullYear()
     const header = "nama,kelas,jenisPemulihan,tahun"
@@ -127,12 +184,21 @@ export default function MuridPage() {
           ⬇️ Muat Turun Template
         </button>
         {murid.length > 0 && (
-          <button
-            onClick={exportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-          >
-            📊 Export Excel
-          </button>
+          <>
+            <button
+              onClick={exportPDF}
+              className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: "#35393c" }}
+            >
+              📄 Export PDF
+            </button>
+            <button
+              onClick={exportExcel}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              📊 Export Excel
+            </button>
+          </>
         )}
       </div>
 
