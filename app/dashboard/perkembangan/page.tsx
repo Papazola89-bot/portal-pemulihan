@@ -143,7 +143,8 @@ export default function PerkembanganPage() {
           3: { halign: "center", cellWidth: 30 },
         },
         margin: { left: 14, right: 14 },
-        didParseCell: (data: { section: string; column: { index: number }; cell: { styles: { textColor: number[] } }; row: { raw: unknown[] } }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        didParseCell: (data: any) => {
           if (data.section === "body" && data.column.index === 2) {
             const val = (data.row.raw as string[])[2]
             data.cell.styles.textColor = val === "Kuasai" ? [22, 163, 74] : [156, 163, 175]
@@ -194,7 +195,8 @@ export default function PerkembanganPage() {
           2: { halign: "center", cellWidth: 40 },
         },
         margin: { left: 14, right: 14 },
-        didParseCell: (data: { section: string; column: { index: number }; cell: { styles: { textColor: number[] } }; row: { raw: unknown[] } }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        didParseCell: (data: any) => {
           if (data.section === "body" && (data.column.index === 1 || data.column.index === 2)) {
             const val = (data.row.raw as string[])[data.column.index]
             if (val === "Lulus") data.cell.styles.textColor = [22, 163, 74]
@@ -304,7 +306,8 @@ export default function PerkembanganPage() {
               3: { halign: "center", cellWidth: 30 },
             },
             margin: { left: 14, right: 14 },
-            didParseCell: (data: { section: string; column: { index: number }; cell: { styles: { textColor: number[] } }; row: { raw: unknown[] } }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        didParseCell: (data: any) => {
               if (data.section === "body" && data.column.index === 2) {
                 const val = (data.row.raw as string[])[2]
                 data.cell.styles.textColor = val === "Kuasai" ? [22, 163, 74] : [156, 163, 175]
@@ -352,7 +355,8 @@ export default function PerkembanganPage() {
               2: { halign: "center", cellWidth: 40 },
             },
             margin: { left: 14, right: 14 },
-            didParseCell: (data: { section: string; column: { index: number }; cell: { styles: { textColor: number[] } }; row: { raw: unknown[] } }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        didParseCell: (data: any) => {
               if (data.section === "body" && (data.column.index === 1 || data.column.index === 2)) {
                 const val = (data.row.raw as string[])[data.column.index]
                 if (val === "Lulus") data.cell.styles.textColor = [22, 163, 74]
