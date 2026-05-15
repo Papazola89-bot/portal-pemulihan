@@ -77,63 +77,74 @@ export default function PerkembanganPage() {
     return true
   })
 
-  function exportPDF() {
-    if (!murid) return
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+  // Helper: draw one perkembangan page (fit 1 page) with "Disahkan oleh"
+  function drawPerkembanganPage(
+    doc: jsPDF,
+    m: Murid,
+    mSubjek: Subjek[],
+    mTicks: Tick[],
+    mSaringan: Saringan[],
+    yr: string
+  ) {
+    // Count total rows to auto-scale
+    const totalRows = mSubjek.reduce((sum, s) => sum + s.kemahiran.length, 0) + mSaringan.length
+    const fs = totalRows > 30 ? 6.5 : totalRows > 20 ? 7 : 8
+    const cp = totalRows > 30 ? 1 : totalRows > 20 ? 1.5 : 2
 
     // Header
-    doc.setFontSize(14)
+    doc.setTextColor(0)
+    doc.setFontSize(13)
     doc.setFont("helvetica", "bold")
-    doc.text("Rekod Perkembangan Murid", 105, 20, { align: "center" })
-    doc.setFontSize(10)
+    doc.text("Rekod Perkembangan Murid", 105, 16, { align: "center" })
+    doc.setFontSize(9)
     doc.setFont("helvetica", "normal")
-    doc.text("Program Pemulihan Khas — SK Semangar", 105, 27, { align: "center" })
-    doc.text(`Tahun ${tahun}`, 105, 33, { align: "center" })
+    doc.text("Program Pemulihan Khas — SK Semangar", 105, 22, { align: "center" })
+    doc.text(`Tahun ${yr}`, 105, 27, { align: "center" })
 
-    // Maklumat murid
-    doc.setFontSize(10)
+    // Maklumat murid (compact - 2 columns)
+    doc.setFontSize(9)
     doc.setFont("helvetica", "bold")
-    doc.text(`Murid: ${murid.nama}`, 14, 44)
+    doc.text(`Murid: ${m.nama}`, 14, 34)
+    doc.text(`Jenis Pemulihan: ${m.jenisPemulihan}`, 120, 34)
     doc.setFont("helvetica", "normal")
-    doc.text(`Kelas: ${murid.kelas}`, 14, 50)
-    doc.text(`Jenis Pemulihan: ${murid.jenisPemulihan}`, 14, 56)
+    doc.text(`Kelas: ${m.kelas}`, 14, 39)
 
-    let yPos = 64
+    let yPos = 44
 
     // Kemahiran per subjek
-    relevantSubjek.forEach((subjek) => {
-      const kuasai = getKuasaiCount(subjek)
+    mSubjek.forEach((subjek) => {
+      const kuasai = subjek.kemahiran.filter((k) =>
+        mTicks.find((t) => t.kemahiranId === k.id && t.kuasai)
+      ).length
       const total = subjek.kemahiran.length
       const pct = total > 0 ? Math.round((kuasai / total) * 100) : 0
 
-      // Subjek header with progress
-      doc.setFontSize(10)
+      doc.setFontSize(8)
       doc.setFont("helvetica", "bold")
       doc.setTextColor(53, 57, 60)
       doc.text(`${subjek.nama} — ${kuasai}/${total} (${pct}%)`, 14, yPos)
-      yPos += 2
+      yPos += 1.5
 
-      // Progress bar
+      // Compact progress bar
       doc.setDrawColor(200)
       doc.setFillColor(240, 240, 240)
-      doc.roundedRect(14, yPos, 100, 4, 1.5, 1.5, "FD")
+      doc.roundedRect(14, yPos, 80, 3, 1, 1, "FD")
       if (pct > 0) {
         doc.setFillColor(164, 216, 255)
-        doc.roundedRect(14, yPos, (100 * pct) / 100, 4, 1.5, 1.5, "F")
+        doc.roundedRect(14, yPos, (80 * pct) / 100, 3, 1, 1, "F")
       }
-      yPos += 8
+      yPos += 5
 
-      // Kemahiran table
       autoTable(doc, {
         startY: yPos,
         head: [["Bil", "Kemahiran", "Status", "Tarikh"]],
         body: subjek.kemahiran.map((k, i) => {
-          const tick = ticks.find((t) => t.kemahiranId === k.id)
+          const tick = mTicks.find((t) => t.kemahiranId === k.id)
           const dikuasai = tick?.kuasai ?? false
           const tarikh = tick?.tarikhTick ? new Date(tick.tarikhTick).toLocaleDateString("ms-MY") : "-"
           return [i + 1, k.nama, dikuasai ? "Kuasai" : "Belum", dikuasai ? tarikh : "-"]
         }),
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { fontSize: fs, cellPadding: cp },
         headStyles: { fillColor: [53, 57, 60], textColor: [255, 255, 255], fontStyle: "bold" },
         alternateRowStyles: { fillColor: [245, 248, 255] },
         columnStyles: {
@@ -153,40 +164,29 @@ export default function PerkembanganPage() {
       })
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      yPos = (doc as any).lastAutoTable.finalY + 10
-
-      // Add new page if near bottom
-      if (yPos > 250) {
-        doc.addPage()
-        yPos = 20
-      }
+      yPos = (doc as any).lastAutoTable.finalY + 4
     })
 
-    // Status Saringan section
-    if (saringanList.length > 0) {
-      if (yPos > 230) {
-        doc.addPage()
-        yPos = 20
-      }
-
-      doc.setFontSize(10)
+    // Status Saringan
+    if (mSaringan.length > 0) {
+      doc.setFontSize(8)
       doc.setFont("helvetica", "bold")
       doc.setTextColor(53, 57, 60)
       doc.text("Status Saringan", 14, yPos)
-      yPos += 4
+      yPos += 2
 
       autoTable(doc, {
         startY: yPos,
         head: [["Saringan", "BM", "Matematik"]],
-        body: saringanList.map((s) => {
-          const tick = s.ticks.find((t) => t.muridId === selectedMurid)
+        body: mSaringan.map((s) => {
+          const tick = s.ticks.find((t) => t.muridId === m.id)
           return [
             s.nama,
             tick ? (tick.kuasaiBM ? "Lulus" : "Gagal") : "—",
             tick ? (tick.kuasaiMat ? "Lulus" : "Gagal") : "—",
           ]
         }),
-        styles: { fontSize: 9, cellPadding: 3 },
+        styles: { fontSize: fs, cellPadding: cp },
         headStyles: { fillColor: [34, 120, 60], textColor: [255, 255, 255], fontStyle: "bold" },
         alternateRowStyles: { fillColor: [240, 253, 244] },
         columnStyles: {
@@ -207,177 +207,54 @@ export default function PerkembanganPage() {
       })
     }
 
-    // Footer
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.setTextColor(150)
-      doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 287)
-      doc.text(`Halaman ${i} / ${pageCount}`, 196, 287, { align: "right" })
-    }
+    // Disahkan oleh — always at bottom of page
+    const signY = 252
+    doc.setDrawColor(0)
+    doc.setTextColor(0)
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "bold")
+    doc.text("Disahkan oleh:", 14, signY)
+    doc.setFont("helvetica", "normal")
 
+    // Guru Pemulihan Khas
+    doc.text("...............................................", 14, signY + 20)
+    doc.setFontSize(8)
+    doc.text("(Guru Pemulihan Khas)", 14, signY + 25)
+
+    // Guru Besar
+    doc.text("...............................................", 120, signY + 20)
+    doc.text("(Guru Besar)", 120, signY + 25)
+
+    // Footer
+    doc.setFontSize(7)
+    doc.setTextColor(150)
+    doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 290)
+  }
+
+  function exportPDF() {
+    if (!murid) return
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    drawPerkembanganPage(doc, murid, relevantSubjek, ticks, saringanList, tahun)
     doc.save(`Perkembangan_${murid.nama.replace(/\s+/g, "_")}_${tahun}.pdf`)
   }
 
   function exportAllPDF() {
-    if (muridList.length === 0 || relevantSubjek.length === 0) return
-
+    if (muridList.length === 0) return
     const promises = muridList.map((m) =>
       fetch(`/api/kemahiran-tick?muridId=${m.id}`).then((r) => r.json())
     )
-
     Promise.all(promises).then((allTicks: Tick[][]) => {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
-      let isFirstPage = true
-
       muridList.forEach((m, idx) => {
-        const muridTicks = allTicks[idx]
-
-        if (!isFirstPage) doc.addPage()
-        isFirstPage = false
-
-        // Header
-        doc.setTextColor(0)
-        doc.setFontSize(14)
-        doc.setFont("helvetica", "bold")
-        doc.text("Rekod Perkembangan Murid", 105, 20, { align: "center" })
-        doc.setFontSize(10)
-        doc.setFont("helvetica", "normal")
-        doc.text("Program Pemulihan Khas — SK Semangar", 105, 27, { align: "center" })
-        doc.text(`Tahun ${tahun}`, 105, 33, { align: "center" })
-
-        // Maklumat murid
-        doc.setFontSize(10)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Murid: ${m.nama}`, 14, 44)
-        doc.setFont("helvetica", "normal")
-        doc.text(`Kelas: ${m.kelas}`, 14, 50)
-        doc.text(`Jenis Pemulihan: ${m.jenisPemulihan}`, 14, 56)
-
-        let yPos = 64
-
-        // Filter subjek for this student
+        if (idx > 0) doc.addPage()
         const mSubjek = subjekList.filter((s) => {
           const jp = m.jenisPemulihan
           if (jp === "Bahasa Melayu") return s.nama.toLowerCase().includes("melayu") || s.nama.toLowerCase().includes("bm")
           if (jp === "Matematik") return s.nama.toLowerCase().includes("matematik") || s.nama.toLowerCase().includes("mat")
           return true
         })
-
-        mSubjek.forEach((subjek) => {
-          const kuasai = subjek.kemahiran.filter((k) =>
-            muridTicks.find((t) => t.kemahiranId === k.id && t.kuasai)
-          ).length
-          const total = subjek.kemahiran.length
-          const pct = total > 0 ? Math.round((kuasai / total) * 100) : 0
-
-          doc.setFontSize(10)
-          doc.setFont("helvetica", "bold")
-          doc.setTextColor(53, 57, 60)
-          doc.text(`${subjek.nama} — ${kuasai}/${total} (${pct}%)`, 14, yPos)
-          yPos += 2
-
-          doc.setDrawColor(200)
-          doc.setFillColor(240, 240, 240)
-          doc.roundedRect(14, yPos, 100, 4, 1.5, 1.5, "FD")
-          if (pct > 0) {
-            doc.setFillColor(164, 216, 255)
-            doc.roundedRect(14, yPos, (100 * pct) / 100, 4, 1.5, 1.5, "F")
-          }
-          yPos += 8
-
-          autoTable(doc, {
-            startY: yPos,
-            head: [["Bil", "Kemahiran", "Status", "Tarikh"]],
-            body: subjek.kemahiran.map((k, i) => {
-              const tick = muridTicks.find((t) => t.kemahiranId === k.id)
-              const dikuasai = tick?.kuasai ?? false
-              const tarikh = tick?.tarikhTick ? new Date(tick.tarikhTick).toLocaleDateString("ms-MY") : "-"
-              return [i + 1, k.nama, dikuasai ? "Kuasai" : "Belum", dikuasai ? tarikh : "-"]
-            }),
-            styles: { fontSize: 8, cellPadding: 2 },
-            headStyles: { fillColor: [53, 57, 60], textColor: [255, 255, 255], fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [245, 248, 255] },
-            columnStyles: {
-              0: { halign: "center", cellWidth: 10 },
-              1: { cellWidth: 85 },
-              2: { halign: "center", cellWidth: 25 },
-              3: { halign: "center", cellWidth: 30 },
-            },
-            margin: { left: 14, right: 14 },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        didParseCell: (data: any) => {
-              if (data.section === "body" && data.column.index === 2) {
-                const val = (data.row.raw as string[])[2]
-                data.cell.styles.textColor = val === "Kuasai" ? [22, 163, 74] : [156, 163, 175]
-              }
-            },
-          })
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          yPos = (doc as any).lastAutoTable.finalY + 10
-          if (yPos > 250) {
-            doc.addPage()
-            yPos = 20
-          }
-        })
-
-        // Status Saringan
-        if (saringanList.length > 0) {
-          if (yPos > 230) {
-            doc.addPage()
-            yPos = 20
-          }
-          doc.setFontSize(10)
-          doc.setFont("helvetica", "bold")
-          doc.setTextColor(53, 57, 60)
-          doc.text("Status Saringan", 14, yPos)
-          yPos += 4
-
-          autoTable(doc, {
-            startY: yPos,
-            head: [["Saringan", "BM", "Matematik"]],
-            body: saringanList.map((s) => {
-              const tick = s.ticks.find((t) => t.muridId === m.id)
-              return [
-                s.nama,
-                tick ? (tick.kuasaiBM ? "Lulus" : "Gagal") : "—",
-                tick ? (tick.kuasaiMat ? "Lulus" : "Gagal") : "—",
-              ]
-            }),
-            styles: { fontSize: 9, cellPadding: 3 },
-            headStyles: { fillColor: [34, 120, 60], textColor: [255, 255, 255], fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [240, 253, 244] },
-            columnStyles: {
-              0: { cellWidth: 70 },
-              1: { halign: "center", cellWidth: 40 },
-              2: { halign: "center", cellWidth: 40 },
-            },
-            margin: { left: 14, right: 14 },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        didParseCell: (data: any) => {
-              if (data.section === "body" && (data.column.index === 1 || data.column.index === 2)) {
-                const val = (data.row.raw as string[])[data.column.index]
-                if (val === "Lulus") data.cell.styles.textColor = [22, 163, 74]
-                else if (val === "Gagal") data.cell.styles.textColor = [220, 38, 38]
-                else data.cell.styles.textColor = [156, 163, 175]
-              }
-            },
-          })
-        }
+        drawPerkembanganPage(doc, m, mSubjek, allTicks[idx], saringanList, tahun)
       })
-
-      // Footer semua halaman
-      const pageCount = doc.getNumberOfPages()
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        doc.setFontSize(8)
-        doc.setTextColor(150)
-        doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 287)
-        doc.text(`Halaman ${i} / ${pageCount}`, 196, 287, { align: "right" })
-      }
-
       doc.save(`Perkembangan_Semua_Murid_${tahun}.pdf`)
     })
   }

@@ -81,51 +81,56 @@ export default function KemahiranPage() {
     loadSubjek()
   }
 
-  function exportPDF() {
-    if (!selectedMurid || !currentSubjek) return
-    const murid = muridList.find((m) => m.id === selectedMurid)
-    if (!murid) return
+  // Helper: draw one kemahiran page (fit 1 page) with "Disahkan oleh"
+  function drawKemahiranPage(doc: jsPDF, m: { nama: string; kelas: string }, subjek: Subjek, kemahiranTicks: Tick[], yr: string) {
+    const rows = subjek.kemahiran.length
+    const kCount = subjek.kemahiran.filter((k) => kemahiranTicks.find((t) => t.kemahiranId === k.id && t.kuasai)).length
+    const total = rows
+    const pct = total > 0 ? Math.round((kCount / total) * 100) : 0
 
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    // Auto-scale: smaller font/padding for more rows
+    const fs = rows > 25 ? 7 : rows > 18 ? 8 : 9
+    const cp = rows > 25 ? 1.5 : rows > 18 ? 2 : 3
 
     // Header
-    doc.setFontSize(14)
+    doc.setTextColor(0)
+    doc.setFontSize(13)
     doc.setFont("helvetica", "bold")
-    doc.text("Rekod Penguasaan Kemahiran", 105, 20, { align: "center" })
-    doc.setFontSize(10)
+    doc.text("Rekod Penguasaan Kemahiran", 105, 18, { align: "center" })
+    doc.setFontSize(9)
     doc.setFont("helvetica", "normal")
-    doc.text("Program Pemulihan Khas — SK Semangar", 105, 27, { align: "center" })
-    doc.text(`Tahun ${tahun}`, 105, 33, { align: "center" })
+    doc.text("Program Pemulihan Khas — SK Semangar", 105, 24, { align: "center" })
+    doc.text(`Tahun ${yr}`, 105, 29, { align: "center" })
 
-    // Maklumat murid
-    doc.setFontSize(10)
+    // Maklumat murid (compact - 2 columns)
+    doc.setFontSize(9)
     doc.setFont("helvetica", "bold")
-    doc.text(`Murid: ${murid.nama}`, 14, 44)
+    doc.text(`Murid: ${m.nama}`, 14, 37)
+    doc.text(`Subjek: ${subjek.nama}`, 120, 37)
     doc.setFont("helvetica", "normal")
-    doc.text(`Kelas: ${murid.kelas}`, 14, 50)
-    doc.text(`Subjek: ${currentSubjek.nama}`, 14, 56)
-    doc.text(`Penguasaan: ${kuasaiCount}/${totalKemahiran} (${peratus}%)`, 14, 62)
+    doc.text(`Kelas: ${m.kelas}`, 14, 42)
+    doc.text(`Penguasaan: ${kCount}/${total} (${pct}%)`, 120, 42)
 
-    // Progress bar visual
+    // Progress bar
     doc.setDrawColor(200)
     doc.setFillColor(240, 240, 240)
-    doc.roundedRect(14, 65, 120, 5, 2, 2, "FD")
-    if (peratus > 0) {
+    doc.roundedRect(14, 45, 100, 4, 1.5, 1.5, "FD")
+    if (pct > 0) {
       doc.setFillColor(164, 216, 255)
-      doc.roundedRect(14, 65, (120 * peratus) / 100, 5, 2, 2, "F")
+      doc.roundedRect(14, 45, (100 * pct) / 100, 4, 1.5, 1.5, "F")
     }
 
-    // Jadual kemahiran
+    // Table
     autoTable(doc, {
-      startY: 76,
+      startY: 53,
       head: [["Bil", "Kemahiran", "Status", "Tarikh Kuasai"]],
-      body: currentSubjek.kemahiran.map((k, i) => {
-        const tick = ticks.find((t) => t.kemahiranId === k.id)
+      body: subjek.kemahiran.map((k, i) => {
+        const tick = kemahiranTicks.find((t) => t.kemahiranId === k.id)
         const kuasai = tick?.kuasai ?? false
         const tarikh = tick?.tarikhTick ? new Date(tick.tarikhTick).toLocaleDateString("ms-MY") : "-"
         return [i + 1, k.nama, kuasai ? "Kuasai" : "Belum", kuasai ? tarikh : "-"]
       }),
-      styles: { fontSize: 9, cellPadding: 3 },
+      styles: { fontSize: fs, cellPadding: cp },
       headStyles: { fillColor: [53, 57, 60], textColor: [255, 255, 255], fontStyle: "bold" },
       alternateRowStyles: { fillColor: [245, 248, 255] },
       columnStyles: {
@@ -144,109 +149,50 @@ export default function KemahiranPage() {
       },
     })
 
-    // Footer
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.setTextColor(150)
-      doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 287)
-      doc.text(`Halaman ${i} / ${pageCount}`, 196, 287, { align: "right" })
-    }
+    // Disahkan oleh — always at bottom of page
+    const signY = 252
+    doc.setDrawColor(0)
+    doc.setTextColor(0)
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "bold")
+    doc.text("Disahkan oleh:", 14, signY)
+    doc.setFont("helvetica", "normal")
 
+    // Guru Pemulihan Khas
+    doc.text("...............................................", 14, signY + 20)
+    doc.setFontSize(8)
+    doc.text("(Guru Pemulihan Khas)", 14, signY + 25)
+
+    // Guru Besar
+    doc.text("...............................................", 120, signY + 20)
+    doc.text("(Guru Besar)", 120, signY + 25)
+
+    // Footer
+    doc.setFontSize(7)
+    doc.setTextColor(150)
+    doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 290)
+  }
+
+  function exportPDF() {
+    if (!selectedMurid || !currentSubjek) return
+    const murid = muridList.find((m) => m.id === selectedMurid)
+    if (!murid) return
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    drawKemahiranPage(doc, murid, currentSubjek, ticks, tahun)
     doc.save(`Kemahiran_${murid.nama.replace(/\s+/g, "_")}_${currentSubjek.nama}_${tahun}.pdf`)
   }
 
   function exportAllPDF() {
     if (!currentSubjek || muridList.length === 0) return
-
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
-    let isFirstPage = true
-
     const promises = muridList.map((murid) =>
       fetch(`/api/kemahiran-tick?muridId=${murid.id}`).then((r) => r.json())
     )
-
     Promise.all(promises).then((allTicks: Tick[][]) => {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
       muridList.forEach((murid, idx) => {
-        const muridTicks = allTicks[idx]
-        const kCount = currentSubjek.kemahiran.filter((k) =>
-          muridTicks.find((t) => t.kemahiranId === k.id && t.kuasai)
-        ).length
-        const total = currentSubjek.kemahiran.length
-        const pct = total > 0 ? Math.round((kCount / total) * 100) : 0
-
-        if (!isFirstPage) doc.addPage()
-        isFirstPage = false
-
-        // Header
-        doc.setTextColor(0)
-        doc.setFontSize(14)
-        doc.setFont("helvetica", "bold")
-        doc.text("Rekod Penguasaan Kemahiran", 105, 20, { align: "center" })
-        doc.setFontSize(10)
-        doc.setFont("helvetica", "normal")
-        doc.text("Program Pemulihan Khas — SK Semangar", 105, 27, { align: "center" })
-        doc.text(`Tahun ${tahun}`, 105, 33, { align: "center" })
-
-        // Maklumat murid
-        doc.setFontSize(10)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Murid: ${murid.nama}`, 14, 44)
-        doc.setFont("helvetica", "normal")
-        doc.text(`Kelas: ${murid.kelas}`, 14, 50)
-        doc.text(`Subjek: ${currentSubjek.nama}`, 14, 56)
-        doc.text(`Penguasaan: ${kCount}/${total} (${pct}%)`, 14, 62)
-
-        // Progress bar
-        doc.setDrawColor(200)
-        doc.setFillColor(240, 240, 240)
-        doc.roundedRect(14, 65, 120, 5, 2, 2, "FD")
-        if (pct > 0) {
-          doc.setFillColor(164, 216, 255)
-          doc.roundedRect(14, 65, (120 * pct) / 100, 5, 2, 2, "F")
-        }
-
-        // Jadual
-        autoTable(doc, {
-          startY: 76,
-          head: [["Bil", "Kemahiran", "Status", "Tarikh Kuasai"]],
-          body: currentSubjek.kemahiran.map((k, i) => {
-            const tick = muridTicks.find((t) => t.kemahiranId === k.id)
-            const kuasai = tick?.kuasai ?? false
-            const tarikh = tick?.tarikhTick ? new Date(tick.tarikhTick).toLocaleDateString("ms-MY") : "-"
-            return [i + 1, k.nama, kuasai ? "Kuasai" : "Belum", kuasai ? tarikh : "-"]
-          }),
-          styles: { fontSize: 9, cellPadding: 3 },
-          headStyles: { fillColor: [53, 57, 60], textColor: [255, 255, 255], fontStyle: "bold" },
-          alternateRowStyles: { fillColor: [245, 248, 255] },
-          columnStyles: {
-            0: { halign: "center", cellWidth: 12 },
-            1: { cellWidth: 90 },
-            2: { halign: "center", cellWidth: 30 },
-            3: { halign: "center", cellWidth: 35 },
-          },
-          margin: { left: 14, right: 14 },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      didParseCell: (data: any) => {
-            if (data.section === "body" && data.column.index === 2) {
-              const val = (data.row.raw as string[])[2]
-              data.cell.styles.textColor = val === "Kuasai" ? [22, 163, 74] : [156, 163, 175]
-            }
-          },
-        })
+        if (idx > 0) doc.addPage()
+        drawKemahiranPage(doc, murid, currentSubjek, allTicks[idx], tahun)
       })
-
-      // Footer semua halaman
-      const pageCount = doc.getNumberOfPages()
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        doc.setFontSize(8)
-        doc.setTextColor(150)
-        doc.text("Dijana dari Portal Pemulihan Khas SK Semangar", 14, 287)
-        doc.text(`Halaman ${i} / ${pageCount}`, 196, 287, { align: "right" })
-      }
-
       doc.save(`Kemahiran_Semua_Murid_${currentSubjek.nama}_${tahun}.pdf`)
     })
   }
