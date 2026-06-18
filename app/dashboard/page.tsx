@@ -65,9 +65,22 @@ export default async function DashboardPage() {
   const jumlahMT = muridList.filter((m) => m.jenisPemulihan === "Matematik").length
   const jumlahBMdanMT = muridList.filter((m) => m.jenisPemulihan === "Bahasa Melayu dan Matematik").length
 
-  const muridKePerdanaSemua = [...new Set(
-    saringanList.flatMap((s) => s.ticks.filter((t) => t.kuasai).map((t) => t.muridId))
-  )]
+  // Seorang murid "menguasai" sesuatu saringan jika subjek pemulihan dia dikuasai
+  // (BM → kuasaiBM, MT → kuasaiMat, BM & MT → kedua-duanya)
+  const muridKuasaiSaringan = (
+    m: (typeof muridList)[number],
+    s: (typeof saringanList)[number]
+  ) => {
+    const tick = s.ticks.find((t) => t.muridId === m.id)
+    if (!tick) return false
+    if (m.jenisPemulihan === "Matematik") return tick.kuasaiMat
+    if (m.jenisPemulihan === "Bahasa Melayu dan Matematik") return tick.kuasaiBM && tick.kuasaiMat
+    return tick.kuasaiBM
+  }
+
+  const muridKePerdanaSemua = muridList
+    .filter((m) => saringanList.some((s) => muridKuasaiSaringan(m, s)))
+    .map((m) => m.id)
 
   const kelasUnik = [...new Set(muridList.map((m) => m.kelas))].sort()
   const saringanNama = ["Pengesanan", "Pelepasan 1", "Pelepasan 2"]
@@ -169,7 +182,7 @@ export default async function DashboardPage() {
       <div className="grid sm:grid-cols-3 gap-3">
         {saringanNama.map((nama) => {
           const s = saringanList.find((x) => x.nama === nama)
-          const kuasai = s ? s.ticks.filter((t) => t.kuasai).length : 0
+          const kuasai = s ? muridList.filter((m) => muridKuasaiSaringan(m, s)).length : 0
           const total = muridList.length
           const peratus = total > 0 && s ? Math.round((kuasai / total) * 100) : 0
           const isLast = nama === "Pelepasan 2"
