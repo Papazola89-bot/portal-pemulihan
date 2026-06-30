@@ -70,12 +70,40 @@ body {
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
 
 @media print {
-  body { background: white !important; }
+  @page { size: A4 portrait; margin: 9mm; }
+
+  html, body { background: white !important; }
+
+  /* Pastikan warna carta/latar dicetak tepat */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 
   /* Layout full-width tanpa sidebar */
   .flex.h-screen { display: block !important; height: auto !important; overflow: visible !important; }
   .flex-1.flex.flex-col { display: block !important; overflow: visible !important; }
-  main { overflow: visible !important; padding: 16px !important; }
+  main { overflow: visible !important; padding: 0 !important; }
+
+  /* Tajuk laporan khas-cetak */
+  .print-only { display: block !important; }
+
+  /* Muatkan dashboard dalam satu page A4 — skala + susunan padat */
+  .dashboard-print {
+    gap: 9px !important;
+    transform: scale(0.9);
+    transform-origin: top left;
+    width: 111.2%;
+  }
+  .dashboard-print .gap-3 { gap: 7px !important; }
+
+  /* Paksa grid kekal berbilang lajur semasa cetak (elak jadi 1 lajur tinggi) */
+  .chart-row { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .dashboard-print .grid-cols-2 { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  .kelas-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+
+  /* Elak kad/carta terpecah antara halaman */
+  .chart-card, .chart-row { break-inside: avoid; page-break-inside: avoid; }
 
   /* Input headcount — tunjuk nilai sahaja, sorok border */
   input[type="number"] {

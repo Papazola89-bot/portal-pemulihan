@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import PrintButton from "./_components/PrintButton"
+import { DonutChart, BarChart, SaringanFunnel } from "./_components/Charts"
 
 function StatTile({ label, value, sub, accent = "var(--ink)", delta }: {
   label: string; value: string | number; sub?: string; accent?: string; delta?: string
@@ -15,15 +16,6 @@ function StatTile({ label, value, sub, accent = "var(--ink)", delta }: {
         <div className="text-[28px] font-bold" style={{ color: accent, letterSpacing: "-0.5px" }}>{value}</div>
         {sub && <div className="text-[11px] tnum font-mono" style={{ color: "var(--ink-4)" }}>{sub}</div>}
       </div>
-    </div>
-  )
-}
-
-function ProgressBar({ value, color, height = 6 }: { value: number; color: string; height?: number }) {
-  const pct = Math.max(0, Math.min(1, value)) * 100
-  return (
-    <div className="w-full rounded-full overflow-hidden" style={{ height, background: "var(--paper-3)" }}>
-      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
     </div>
   )
 }
@@ -85,8 +77,40 @@ export default async function DashboardPage() {
   const kelasUnik = [...new Set(muridList.map((m) => m.kelas))].sort()
   const saringanNama = ["Pengesanan", "Pelepasan 1", "Pelepasan 2"]
 
+  // Data carta
+  const donutData = [
+    { label: "Pemulihan BM", value: jumlahBM, color: "var(--bm)" },
+    { label: "Pemulihan MT", value: jumlahMT, color: "var(--mt)" },
+    { label: "BM & MT", value: jumlahBMdanMT, color: "var(--bmmt)" },
+  ]
+  const barData = kelasUnik.map((kelas) => ({
+    label: kelas,
+    value: muridList.filter((m) => m.kelas === kelas).length,
+  }))
+  const funnelData = saringanNama.map((nama, i) => {
+    const s = saringanList.find((x) => x.nama === nama)
+    return {
+      label: nama,
+      value: s ? muridList.filter((m) => muridKuasaiSaringan(m, s)).length : 0,
+      color: i === 2 ? "var(--green)" : "var(--blue)",
+    }
+  })
+
+  const tarikhCetak = new Date().toLocaleDateString("ms-MY", { day: "numeric", month: "long", year: "numeric" })
+
   return (
-    <div className="flex flex-col gap-[18px]">
+    <div className="dashboard-print flex flex-col gap-[18px]">
+      {/* Tajuk laporan — hanya untuk cetakan */}
+      <div className="print-only" style={{ display: "none", borderBottom: "2px solid var(--ink)", paddingBottom: 8, marginBottom: 4 }}>
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="text-[18px] font-bold" style={{ color: "var(--ink)" }}>Laporan Dashboard Pemulihan Khas</div>
+            <div className="text-[12px]" style={{ color: "var(--ink-3)" }}>SK Semangar · Tahun {tahunSemasa}</div>
+          </div>
+          <div className="text-[11px] text-right" style={{ color: "var(--ink-3)" }}>Dicetak: {tarikhCetak}</div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -120,6 +144,32 @@ export default async function DashboardPage() {
         <StatTile label="Ke Kelas Perdana" value={muridKePerdanaSemua.length} sub={`/ ${muridList.length}`} accent="var(--green)" delta={muridKePerdanaSemua.length > 0 ? `+${muridKePerdanaSemua.length}` : undefined} />
       </div>
 
+      {/* Baris Carta: Donut · Bar · Funnel */}
+      {muridList.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 chart-row">
+          {/* Donut — pecahan jenis pemulihan */}
+          <div className="bg-white rounded-xl p-4 chart-card" style={{ border: "1px solid var(--line)" }}>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: "var(--ink)" }}>Pecahan Jenis Pemulihan</div>
+            <div className="text-[11px] mb-3" style={{ color: "var(--ink-4)" }}>Agihan murid mengikut subjek</div>
+            <DonutChart data={donutData} total={muridList.length} />
+          </div>
+
+          {/* Bar — murid ikut kelas */}
+          <div className="bg-white rounded-xl p-4 chart-card" style={{ border: "1px solid var(--line)" }}>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: "var(--ink)" }}>Bilangan Murid Mengikut Kelas</div>
+            <div className="text-[11px] mb-1" style={{ color: "var(--ink-4)" }}>{kelasUnik.length} kelas aktif</div>
+            <BarChart data={barData} />
+          </div>
+
+          {/* Funnel — penguasaan saringan */}
+          <div className="bg-white rounded-xl p-4 chart-card" style={{ border: "1px solid var(--line)" }}>
+            <div className="text-[13px] font-bold mb-0.5" style={{ color: "var(--ink)" }}>Penguasaan Saringan</div>
+            <div className="text-[11px] mb-3" style={{ color: "var(--ink-4)" }}>Bilangan murid kuasai setiap saringan</div>
+            <SaringanFunnel data={funnelData} total={muridList.length} />
+          </div>
+        </div>
+      )}
+
       {/* Pecahan Mengikut Kelas */}
       {kelasUnik.length > 0 && (
         <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid var(--line)" }}>
@@ -130,7 +180,7 @@ export default async function DashboardPage() {
             </div>
             <Pill tone="paper">{kelasUnik.length} kelas aktif</Pill>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 kelas-grid">
             {kelasUnik.map((kelas, i) => {
               const muridKelas = muridList.filter((m) => m.kelas === kelas)
               const bmKelas = muridKelas.filter((m) => m.jenisPemulihan === "Bahasa Melayu").length
@@ -177,38 +227,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Ringkasan Saringan */}
-      <div className="grid sm:grid-cols-3 gap-3">
-        {saringanNama.map((nama) => {
-          const s = saringanList.find((x) => x.nama === nama)
-          const kuasai = s ? muridList.filter((m) => muridKuasaiSaringan(m, s)).length : 0
-          const total = muridList.length
-          const peratus = total > 0 && s ? Math.round((kuasai / total) * 100) : 0
-          const isLast = nama === "Pelepasan 2"
-          const accent = isLast ? "var(--green)" : "var(--blue)"
-
-          return (
-            <div key={nama} className="bg-white rounded-xl p-4" style={{ border: "1px solid var(--line)" }}>
-              <div className="flex justify-between items-start mb-2.5">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.6px]" style={{ color: "var(--ink-4)" }}>Saringan</div>
-                  <div className="text-base font-bold mt-0.5" style={{ color: "var(--ink)" }}>{nama}</div>
-                </div>
-                {s && <Pill tone={isLast ? "green" : "blue"}>{peratus}%</Pill>}
-              </div>
-              <div className="flex items-baseline gap-1.5 font-mono mb-2">
-                <div className="text-[32px] font-bold tnum" style={{ color: accent, letterSpacing: "-1px" }}>{s ? kuasai : "—"}</div>
-                <div className="text-[13px] tnum" style={{ color: "var(--ink-4)" }}>/ {total} murid kuasai</div>
-              </div>
-              {s && <ProgressBar value={kuasai / total} color={accent} height={6} />}
-              {!s && (
-                <p className="text-xs italic" style={{ color: "var(--ink-4)" }}>Belum dicipta</p>
-              )}
-            </div>
-          )
-        })}
-      </div>
 
       {muridList.length === 0 && (
         <div className="bg-white rounded-xl p-10 text-center" style={{ border: "1px dashed var(--line)" }}>
