@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import PrintButton from "./_components/PrintButton"
+import YearFilter from "./_components/YearFilter"
 import { DonutChart, BarChart, SaringanFunnel } from "./_components/Charts"
 
 function StatTile({ label, value, sub, accent = "var(--ink)", delta }: {
@@ -41,9 +42,25 @@ function Pill({ children, tone = "ink" }: { children: React.ReactNode; tone?: st
   )
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tahun?: string }>
+}) {
   const session = await auth()
-  const tahunSemasa = new Date().getFullYear()
+  const tahunKini = new Date().getFullYear()
+
+  // Senarai tahun yang ada data murid (+ tahun semasa sentiasa tersedia)
+  const tahunMurid = await prisma.murid.findMany({
+    distinct: ["tahun"],
+    select: { tahun: true },
+    orderBy: { tahun: "desc" },
+  })
+  const senaraiTahun = [...new Set([tahunKini, ...tahunMurid.map((m) => m.tahun)])].sort((a, b) => b - a)
+
+  const sp = await searchParams
+  const dipilih = Number(sp.tahun)
+  const tahunSemasa = senaraiTahun.includes(dipilih) ? dipilih : tahunKini
 
   const [muridList, saringanList] = await Promise.all([
     prisma.murid.findMany({ where: { tahun: tahunSemasa }, orderBy: { kelas: "asc" } }),
@@ -121,7 +138,8 @@ export default async function DashboardPage() {
             Selamat Datang, {session?.user?.name ?? "Guru"}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <YearFilter tahun={tahunSemasa} senaraiTahun={senaraiTahun} />
           <PrintButton />
         </div>
       </div>
