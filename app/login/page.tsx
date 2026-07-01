@@ -177,10 +177,6 @@ export default function LoginPage() {
           <p className="text-[11px] text-center mt-2" style={{ color: "var(--ink-4)" }}>
             Tetamu hanya boleh melihat Dashboard
           </p>
-
-          <div className="mt-6 p-3 rounded-lg text-[11px] font-mono" style={{ background: "var(--paper-2)", color: "var(--ink-4)" }}>
-            Demo: <b style={{ color: "var(--ink)" }}>admin</b> / <b style={{ color: "var(--ink)" }}>admin123</b>
-          </div>
         </div>
       </div>
     </div>
