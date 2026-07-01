@@ -51,14 +51,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="px-[18px] py-5 border-b" style={{ borderColor: "var(--sidebar-border)" }}>
           <div className="flex items-center gap-[10px]">
-            <div
-              className="w-8 h-8 rounded-[6px] flex items-center justify-center font-mono text-sm font-extrabold"
-              style={{ backgroundColor: "var(--yellow)", color: "#0F1A24" }}
-            >
-              P+
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Piksel Pemulihan"
+              className="w-9 h-9 rounded-[7px] object-contain bg-white p-[3px]"
+            />
             <div>
-              <div className="text-[13px] font-bold text-white tracking-[0.2px]">Portal Pemulihan</div>
+              <div className="text-[13px] font-bold text-white tracking-[0.2px]">Piksel Pemulihan</div>
               <div className="text-[10.5px] font-mono" style={{ color: "#8FB7D9" }}>SK SEMANGAR · 2026</div>
             </div>
           </div>

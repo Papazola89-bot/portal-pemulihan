@@ -38,14 +38,14 @@ export default function LoginPage() {
       >
         <div>
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center font-mono text-lg font-extrabold"
-              style={{ backgroundColor: "var(--yellow)", color: "#0F1A24" }}
-            >
-              P+
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Piksel Pemulihan"
+              className="w-11 h-11 rounded-lg object-contain bg-white p-1"
+            />
             <div>
-              <div className="text-[13px] font-semibold tracking-[0.4px]">Portal Pemulihan</div>
+              <div className="text-[13px] font-semibold tracking-[0.4px]">Piksel Pemulihan</div>
               <div className="text-[11px] font-mono" style={{ color: "#8FB7D9" }}>SK SEMANGAR · 2026</div>
             </div>
           </div>
@@ -77,14 +77,14 @@ export default function LoginPage() {
         <div className="w-full max-w-[360px]">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center font-mono text-lg font-extrabold"
-              style={{ backgroundColor: "var(--yellow)", color: "#0F1A24" }}
-            >
-              P+
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Piksel Pemulihan"
+              className="w-11 h-11 rounded-lg object-contain"
+            />
             <div>
-              <div className="text-[13px] font-bold" style={{ color: "var(--ink)" }}>Portal Pemulihan</div>
+              <div className="text-[13px] font-bold" style={{ color: "var(--ink)" }}>Piksel Pemulihan</div>
               <div className="text-[11px] font-mono" style={{ color: "var(--ink-4)" }}>SK SEMANGAR</div>
             </div>
           </div>
