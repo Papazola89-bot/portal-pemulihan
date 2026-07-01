@@ -14,6 +14,7 @@ const navItems = [
   { href: "/dashboard/perkembangan", label: "Rekod Perkembangan", icon: "chart" },
   { href: "/dashboard/bppi", label: "BPPI", icon: "clipboard" },
   { href: "/dashboard/headcount", label: "Headcount", icon: "list" },
+  { href: "/dashboard/fail", label: "Fail Pemulihan Khas", icon: "folder" },
   { href: "/dashboard/tetapan", label: "Tetapan", icon: "gear" },
 ]
 
@@ -28,6 +29,7 @@ function NavIcon({ name, active }: { name: string; active: boolean }) {
     case "filter": return <svg {...props}><path d="M4 5h16l-6 8v6l-4-2v-4z"/></svg>
     case "chart": return <svg {...props}><path d="M4 20V8M10 20V4M16 20v-8M22 20H2"/></svg>
     case "list": return <svg {...props}><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    case "folder": return <svg {...props}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
     case "clipboard": return <svg {...props}><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg>
     case "gear": return <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a7.97 7.97 0 0 0 0-6l2-1.5-2-3.5-2.4 1a8 8 0 0 0-5.2-3l-.4-2.5h-4l-.4 2.5a8 8 0 0 0-5.2 3l-2.4-1-2 3.5L0 9a7.97 7.97 0 0 0 0 6"/></svg>
     default: return null

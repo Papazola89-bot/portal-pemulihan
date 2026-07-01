@@ -87,6 +87,15 @@ model JadualArchive {
   createdAt DateTime @default(now())
 }
 
+model FailPautan {
+  id         String   @id @default(cuid())
+  tajuk      String
+  url        String
+  keterangan String   @default("")
+  urutan     Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
 model HeadcountEntry {
   id      String @id @default(cuid())
   muridId String
