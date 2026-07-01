@@ -81,18 +81,15 @@ export default function LoginPage() {
       {/* Right form panel */}
       <div className="flex items-center justify-center p-8 lg:p-12">
         <div className="w-full max-w-[360px]">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
+          {/* Logo utama */}
+          <div className="flex flex-col items-center text-center mb-7">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="Piksel Pemulihan"
-              className="w-11 h-11 rounded-lg object-contain"
+              className="w-28 h-28 object-contain"
             />
-            <div>
-              <div className="text-[13px] font-bold" style={{ color: "var(--ink)" }}>Piksel Pemulihan</div>
-              <div className="text-[11px] font-mono" style={{ color: "var(--ink-4)" }}>SK SEMANGAR</div>
-            </div>
+            <div className="text-[11px] font-mono mt-1" style={{ color: "var(--ink-4)" }}>SK SEMANGAR · 2026</div>
           </div>
 
           <div className="text-[11px] font-mono uppercase tracking-[0.8px] mb-1.5" style={{ color: "var(--ink-4)" }}>
