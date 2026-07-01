@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import PrintButton from "./_components/PrintButton"
@@ -48,6 +49,9 @@ export default async function DashboardPage({
   searchParams: Promise<{ tahun?: string }>
 }) {
   const session = await auth()
+  const c = await cookies()
+  const isGuest = !session && c.get("guest")?.value === "1"
+  const namaPengguna = isGuest ? "Tetamu" : (session?.user?.name ?? "Guru")
   const tahunKini = new Date().getFullYear()
 
   // Senarai tahun yang ada data murid (+ tahun semasa sentiasa tersedia)
@@ -135,7 +139,7 @@ export default async function DashboardPage({
             Dashboard · Tahun {tahunSemasa}
           </div>
           <h2 className="text-xl font-bold" style={{ color: "var(--ink)", letterSpacing: "-0.3px" }}>
-            Selamat Datang, {session?.user?.name ?? "Guru"}
+            Selamat Datang, {namaPengguna}
           </h2>
         </div>
         <div className="flex items-center gap-3">

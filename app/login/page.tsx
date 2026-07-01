@@ -29,6 +29,12 @@ export default function LoginPage() {
     }
   }
 
+  function masukTetamu() {
+    // Cookie tetamu — dibaca oleh proxy untuk benarkan lihat dashboard sahaja
+    document.cookie = "guest=1; path=/; max-age=86400; SameSite=Lax"
+    window.location.href = "/dashboard"
+  }
+
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2" style={{ background: "var(--paper)" }}>
       {/* Left brand panel */}
@@ -150,7 +156,29 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-7 p-3 rounded-lg text-[11px] font-mono" style={{ background: "var(--paper-2)", color: "var(--ink-4)" }}>
+          {/* Pemisah */}
+          <div className="flex items-center gap-3 mt-6 mb-1">
+            <div className="flex-1 h-px" style={{ background: "var(--line)" }} />
+            <span className="text-[11px] font-mono uppercase tracking-[0.6px]" style={{ color: "var(--ink-4)" }}>atau</span>
+            <div className="flex-1 h-px" style={{ background: "var(--line)" }} />
+          </div>
+
+          <button
+            type="button"
+            onClick={masukTetamu}
+            className="w-full py-3 px-3.5 rounded-[10px] text-[13px] font-bold flex items-center justify-center gap-2 transition-colors hover:bg-black/[0.03]"
+            style={{ border: "1px solid var(--line)", color: "var(--ink-2)", background: "#fff" }}
+          >
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="3.2" /><path d="M5 20c.7-3.5 3.3-5.5 7-5.5s6.3 2 7 5.5" />
+            </svg>
+            Lihat sebagai Tetamu
+          </button>
+          <p className="text-[11px] text-center mt-2" style={{ color: "var(--ink-4)" }}>
+            Tetamu hanya boleh melihat Dashboard
+          </p>
+
+          <div className="mt-6 p-3 rounded-lg text-[11px] font-mono" style={{ background: "var(--paper-2)", color: "var(--ink-4)" }}>
             Demo: <b style={{ color: "var(--ink)" }}>admin</b> / <b style={{ color: "var(--ink)" }}>admin123</b>
           </div>
         </div>

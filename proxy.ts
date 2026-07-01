@@ -4,12 +4,13 @@ import type { NextRequest } from "next/server"
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow auth API routes and login page
+  // Allow auth API routes, login page, dan fail statik (logo, ikon, dll.)
   if (
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
+    pathname === "/favicon.ico" ||
+    /\.(png|jpe?g|svg|gif|webp|ico|txt|xml|json|woff2?)$/i.test(pathname)
   ) {
     return NextResponse.next()
   }
@@ -20,11 +21,21 @@ export function proxy(request: NextRequest) {
     request.cookies.get("next-auth.session-token")?.value ||
     request.cookies.get("__Secure-authjs.session-token")?.value
 
-  if (!sessionToken) {
-    return NextResponse.redirect(new URL("/login", request.url))
+  // Guru penuh — akses semua
+  if (sessionToken) {
+    return NextResponse.next()
   }
 
-  return NextResponse.next()
+  // Tetamu — hanya benarkan lihat dashboard
+  const isGuest = request.cookies.get("guest")?.value === "1"
+  if (isGuest) {
+    if (pathname === "/dashboard") {
+      return NextResponse.next()
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
+
+  return NextResponse.redirect(new URL("/login", request.url))
 }
 
 export const config = {
