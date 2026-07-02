@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import PrintButton from "./_components/PrintButton"
 import YearFilter from "./_components/YearFilter"
 import { DonutChart, BarChart, SaringanFunnel } from "./_components/Charts"
+import SemakanSaringan, { type SaringanBreakdown } from "./_components/SemakanSaringan"
 
 function StatTile({ label, value, sub, accent = "var(--ink)", delta }: {
   label: string; value: string | number; sub?: string; accent?: string; delta?: string
@@ -133,6 +134,17 @@ export default async function DashboardPage({
   const senaraiDarjah = [...new Set(muridList.map(darjahMurid))]
     .filter((d) => !isNaN(d))
     .sort((a, b) => a - b)
+
+  // Pecahan setiap saringan: siapa menguasai vs belum (untuk penapis interaktif)
+  const semakanSaringan: SaringanBreakdown[] = saringanNama.map((nama) => {
+    const s = saringanList.find((x) => x.nama === nama)
+    const menguasai = s ? muridList.filter((m) => muridKuasaiSaringan(m, s)) : []
+    const menguasaiIds = new Set(menguasai.map((m) => m.id))
+    const tidakMenguasai = muridList
+      .filter((m) => !menguasaiIds.has(m.id))
+      .map((m) => ({ id: m.id, nama: m.nama, kelas: m.kelas, jenis: m.jenisPemulihan }))
+    return { nama, jumlah: muridList.length, menguasai: menguasai.length, tidakMenguasai }
+  })
 
   const tarikhCetak = new Date().toLocaleDateString("ms-MY", { day: "numeric", month: "long", year: "numeric" })
 
@@ -316,6 +328,9 @@ export default async function DashboardPage({
           </div>
         </div>
       )}
+
+      {/* Semakan interaktif murid ikut saringan */}
+      {muridList.length > 0 && <SemakanSaringan data={semakanSaringan} />}
 
       {/* Pecahan Mengikut Kelas */}
       {kelasUnik.length > 0 && (
