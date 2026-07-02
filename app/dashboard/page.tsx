@@ -117,6 +117,23 @@ export default async function DashboardPage({
     }
   })
 
+  // Perbandingan saringan: murid yang kuasai keluar ke kelas perdana,
+  // baki dibawa ke saringan seterusnya (Pengesanan → Pelepasan 1 → Pelepasan 2)
+  let bakiSemasa = muridList
+  const perbandinganSaringan = saringanNama.map((nama) => {
+    const s = saringanList.find((x) => x.nama === nama)
+    const masuk = bakiSemasa.length
+    const kuasaiIds = s ? new Set(bakiSemasa.filter((m) => muridKuasaiSaringan(m, s)).map((m) => m.id)) : new Set<string>()
+    bakiSemasa = bakiSemasa.filter((m) => !kuasaiIds.has(m.id))
+    return { nama, masuk, kuasai: kuasaiIds.size, baki: bakiSemasa.length, wujud: !!s }
+  })
+
+  // Jumlah murid semasa ikut tahun (darjah) — angka pertama nama kelas, cth. "3 SOLARIS" → Tahun 3
+  const darjahMurid = (m: (typeof muridList)[number]) => parseInt(m.kelas)
+  const senaraiDarjah = [...new Set(muridList.map(darjahMurid))]
+    .filter((d) => !isNaN(d))
+    .sort((a, b) => a - b)
+
   const tarikhCetak = new Date().toLocaleDateString("ms-MY", { day: "numeric", month: "long", year: "numeric" })
 
   return (
@@ -166,6 +183,35 @@ export default async function DashboardPage({
         <StatTile label="Ke Kelas Perdana" value={muridKePerdanaSemua.length} sub={`/ ${muridList.length}`} accent="var(--green)" delta={muridKePerdanaSemua.length > 0 ? `+${muridKePerdanaSemua.length}` : undefined} />
       </div>
 
+      {/* Jumlah murid semasa ikut tahun (darjah) */}
+      {senaraiDarjah.length > 0 && (
+        <div className="bg-white rounded-xl p-4" style={{ border: "1px solid var(--line)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[13px] font-bold" style={{ color: "var(--ink)" }}>Murid Semasa Ikut Tahun</div>
+              <div className="text-[11px] mt-0.5" style={{ color: "var(--ink-4)" }}>Bilangan murid pemulihan mengikut darjah · Sesi {tahunSemasa}</div>
+            </div>
+            <Pill tone="paper">{muridList.length} murid</Pill>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {senaraiDarjah.map((d) => {
+              const muridDarjah = muridList.filter((m) => darjahMurid(m) === d)
+              const kelasDarjah = [...new Set(muridDarjah.map((m) => m.kelas))].sort()
+              return (
+                <div key={d} className="rounded-lg p-3 flex flex-col gap-0.5" style={{ background: "var(--paper)", border: "1px solid var(--line-soft)" }}>
+                  <div className="text-[10.5px] font-semibold uppercase tracking-[0.8px]" style={{ color: "var(--ink-4)" }}>Tahun {d}</div>
+                  <div className="flex items-baseline gap-1.5 font-mono tnum">
+                    <div className="text-[26px] font-bold" style={{ color: "var(--ink)", letterSpacing: "-0.5px" }}>{muridDarjah.length}</div>
+                    <div className="text-[11px]" style={{ color: "var(--ink-4)" }}>murid</div>
+                  </div>
+                  <div className="text-[10.5px] truncate" style={{ color: "var(--ink-4)" }}>{kelasDarjah.join(", ")}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Baris Carta: Donut · Bar · Funnel */}
       {muridList.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 chart-row">
@@ -188,6 +234,85 @@ export default async function DashboardPage({
             <div className="text-[13px] font-bold mb-0.5" style={{ color: "var(--ink)" }}>Penguasaan Saringan</div>
             <div className="text-[11px] mb-3" style={{ color: "var(--ink-4)" }}>Bilangan murid kuasai setiap saringan</div>
             <SaringanFunnel data={funnelData} total={muridList.length} />
+          </div>
+        </div>
+      )}
+
+      {/* Perbandingan Saringan: Pengesanan → Pelepasan 2 */}
+      {muridList.length > 0 && (
+        <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid var(--line)" }}>
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--line-soft)" }}>
+            <div>
+              <div className="text-[13px] font-bold" style={{ color: "var(--ink)" }}>Perbandingan Saringan</div>
+              <div className="text-[11px] mt-0.5" style={{ color: "var(--ink-4)" }}>Aliran jumlah murid dari Pengesanan hingga Pelepasan 2 — murid kuasai keluar ke kelas perdana</div>
+            </div>
+            <Pill tone="paper">Sesi {tahunSemasa}</Pill>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3">
+            {perbandinganSaringan.map((p, i) => {
+              const pctBaki = p.masuk > 0 ? Math.round((p.baki / p.masuk) * 100) : 0
+              return (
+                <div key={p.nama} className="p-4 relative" style={{
+                  borderRight: i < 2 ? "1px solid var(--line-soft)" : "none",
+                }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[12px] font-bold" style={{ color: "var(--ink)" }}>
+                      <span className="font-mono mr-1.5" style={{ color: "var(--ink-4)" }}>{i + 1}</span>{p.nama}
+                    </div>
+                    {i > 0 && perbandinganSaringan[i - 1].kuasai > 0 && (
+                      <span className="text-[10.5px] font-bold font-mono tnum" style={{ color: "var(--green)" }}>
+                        −{perbandinganSaringan[i - 1].kuasai} murid
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-baseline gap-1.5 font-mono tnum mb-2.5">
+                    <div className="text-[34px] font-bold leading-none" style={{ color: "var(--ink)", letterSpacing: "-1px" }}>{p.masuk}</div>
+                    <div className="text-[11px]" style={{ color: "var(--ink-4)" }}>murid dalam pemulihan</div>
+                  </div>
+
+                  {/* Bar perbandingan relatif kepada jumlah asal */}
+                  <div className="w-full rounded-full overflow-hidden mb-2.5" style={{ height: 8, background: "var(--paper-2)" }}>
+                    <div className="h-full rounded-full" style={{
+                      width: `${muridList.length > 0 ? (p.masuk / muridList.length) * 100 : 0}%`,
+                      background: i === 2 ? "var(--green)" : "var(--blue)",
+                    }} />
+                  </div>
+
+                  {!p.wujud ? (
+                    <div className="text-[11px] px-2.5 py-1.5 rounded-md" style={{ background: "var(--paper-2)", color: "var(--ink-4)" }}>
+                      Belum ada rekod saringan ini
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1 text-[11px]">
+                      <div className="flex justify-between px-2.5 py-1.5 rounded-md font-semibold" style={{
+                        background: p.kuasai > 0 ? "var(--green-soft)" : "var(--paper-2)",
+                        color: p.kuasai > 0 ? "var(--green)" : "var(--ink-4)",
+                      }}>
+                        <span>Kuasai · ke kelas perdana</span>
+                        <span className="font-mono tnum">{p.kuasai}</span>
+                      </div>
+                      <div className="flex justify-between px-2.5 py-1.5 rounded-md font-semibold" style={{ background: "var(--paper-2)", color: "var(--ink-3)" }}>
+                        <span>Kekal pemulihan ({pctBaki}%)</span>
+                        <span className="font-mono tnum">{p.baki}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Rumusan akhir */}
+          <div className="flex items-center justify-between px-4 py-2.5 text-[11.5px]" style={{ borderTop: "1px solid var(--line-soft)", background: "var(--paper)" }}>
+            <span style={{ color: "var(--ink-3)" }}>
+              Selepas Pelepasan 2: <b style={{ color: "var(--green)" }}>{muridKePerdanaSemua.length}</b> murid ke kelas perdana ·{" "}
+              <b style={{ color: "var(--ink)" }}>{perbandinganSaringan[2].baki}</b> murid masih dalam pemulihan
+            </span>
+            <span className="font-mono tnum" style={{ color: "var(--ink-4)" }}>
+              {muridList.length > 0 ? Math.round((muridKePerdanaSemua.length / muridList.length) * 100) : 0}% pulih
+            </span>
           </div>
         </div>
       )}
